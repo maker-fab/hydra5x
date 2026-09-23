@@ -1,0 +1,39 @@
+# --- Environnements Python ---
+# Deux venv separes et non fusionnables : cadquery exige numpy>=2,
+# trimesh 4.3.1 exige numpy<2. Voir docs/install.md.
+.venv/
+.venv-dxf/
+venv/
+__pycache__/
+*.py[cod]
+
+# --- Slicer Fractal Cortex ---
+# Depot GPL-3.0 tiers, clone et patche par docs/install.md etape 1.
+# Le redistribuer ici serait republier le projet d'un autre.
+cortex/
+
+# --- Artefacts de compilation ---
+build/
+kinematics/ref_cli
+kinematics/sanity_test
+*.exe
+*.o
+*.so
+*.pyd
+
+# --- Caches et telechargements ---
+fabrication/.dxf_cache/
+*.stp
+*.step
+*.zip
+
+# --- G-code ---
+# Seules les deux references de non-regression sont versionnees ; tout le
+# reste est regenere par tools/test_slice.py et tools/test_limits.py.
+results/gcode/*
+!results/gcode/reference_L_2directions.gcode
+!results/gcode/reference_Y_cylindres_3directions.gcode
+
+# --- Systeme ---
+.DS_Store
+Thumbs.db

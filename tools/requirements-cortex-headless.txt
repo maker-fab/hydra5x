@@ -1,0 +1,29 @@
+# Dependances reelles pour faire tourner le COEUR de slicing de Fractal Cortex
+# (slicing_functions.py) sans le GUI, testees sur Linux / Python 3.12.
+#
+# Le README de Cortex ne liste QUE : glooey, numpy, numpy-stl, pyglet,
+# pyOpenGL, shapely, trimesh. Les cinq lignes marquees (*) sont requises et
+# NON documentees -- l'installation documentee echoue immediatement.
+#
+# Piege de version : scipy recent tire numpy>=2, or trimesh 4.3.1 utilise
+# ndarray.ptp() supprime dans numpy 2. D'ou le double epinglage.
+
+numpy==1.26.4
+scipy==1.13.1        # (*) requis par trimesh.slice_plane -- et <1.14 pour numpy 1.x
+shapely==2.0.4
+trimesh[easy]==4.3.1
+manifold3d           # (*) requis par la difference booleenne (chiselling)
+networkx             # (*) requis par trimesh.path
+rtree                # (*) requis par trimesh.path
+mapbox_earcut        # (*) requis par la triangulation
+
+# --- GUI (optionnel : le coeur de slicing tourne sans) ---
+# Teste OK sur Linux / Python 3.12. Necessite AUSSI 4 corrections de casse
+# dans le code (voir cortex-gui-linux.patch) : le code reference
+# "Checkbox_Images" et "Base/Down/Over.png" alors que les dossiers/fichiers
+# reels sont "CheckBox_Images" et "base/down/over.png". Invisible sous
+# Windows (casse insensible), bloquant sous Linux.
+pyglet==1.5.28
+glooey==0.3.6
+PyOpenGL==3.1.0
+more_itertools==8.14.0   # (*) 11.x casse glooey : "unhashable type: dict"

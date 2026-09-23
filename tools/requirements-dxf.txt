@@ -1,0 +1,15 @@
+# Dependances de tools/export_dxf.py — extraction des profils DXF depuis
+# un assemblage STEP.
+#
+# ATTENTION : environnement SEPARE obligatoire.
+# cadquery tire numpy>=2, or trimesh 4.3.1 (chaine de slicing) utilise
+# ndarray.ptp(), supprime dans NumPy 2.0. Les deux ne cohabitent pas.
+#
+#   python3 -m venv .venv-dxf
+#   source .venv-dxf/bin/activate
+#   pip install -r tools/requirements-dxf.txt
+#
+# Teste sur Linux / Python 3.12.
+
+cadquery              # OpenCascade : lecture STEP, aplatissement, export DXF
+ezdxf                 # relecture des DXF produits, pour verification

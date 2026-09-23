@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="320" height="320">
+  <title>HYDRA5X</title>
+  <!-- Genere par gen_logo.py : 34 lames, vrille 330 deg. -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M245.0 290.3 L75.0 301.7" stroke="rgb(232,176,120)" stroke-width="8.4"/>
+    <path d="M239.8 279.3 L80.2 296.8" stroke="rgb(232,174,116)" stroke-width="8.4"/>
+    <path d="M232.1 269.4 L87.9 290.9" stroke="rgb(233,171,112)" stroke-width="8.4"/>
+    <path d="M222.2 260.7 L97.8 283.6" stroke="rgb(233,169,107)" stroke-width="8.4"/>
+    <path d="M210.5 253.5 L109.5 275.0" stroke="rgb(234,166,103)" stroke-width="8.4"/>
+    <path d="M197.2 247.5 L122.8 265.1" stroke="rgb(234,164,99)" stroke-width="8.4"/>
+    <path d="M182.8 242.6 L137.2 254.1" stroke="rgb(235,162,95)" stroke-width="8.4"/>
+    <path d="M167.7 238.4 L152.3 242.4" stroke="rgb(235,159,91)" stroke-width="8.4"/>
+    <path d="M152.3 230.5 L167.7 234.5" stroke="rgb(235,157,87)" stroke-width="8.4"/>
+    <path d="M137.2 218.8 L182.8 230.3" stroke="rgb(236,154,82)" stroke-width="8.4"/>
+    <path d="M122.8 207.8 L197.2 225.4" stroke="rgb(236,152,78)" stroke-width="8.4"/>
+    <path d="M109.5 197.9 L210.5 219.4" stroke="rgb(237,150,74)" stroke-width="8.4"/>
+    <path d="M97.8 189.3 L222.2 212.2" stroke="rgb(237,147,70)" stroke-width="8.4"/>
+    <path d="M87.9 182.0 L232.1 203.5" stroke="rgb(237,145,66)" stroke-width="8.4"/>
+    <path d="M80.2 176.1 L239.8 193.6" stroke="rgb(238,142,61)" stroke-width="8.4"/>
+    <path d="M75.0 171.2 L245.0 182.6" stroke="rgb(238,140,57)" stroke-width="8.4"/>
+    <path d="M72.3 167.0 L247.7 171.0" stroke="rgb(239,138,53)" stroke-width="8.4"/>
+    <path d="M72.3 163.0 L247.7 159.0" stroke="rgb(239,135,49)" stroke-width="8.4"/>
+    <path d="M75.0 158.8 L245.0 147.4" stroke="rgb(240,133,45)" stroke-width="8.4"/>
+    <path d="M80.2 153.9 L239.8 136.4" stroke="rgb(240,130,41)" stroke-width="8.4"/>
+    <path d="M87.9 148.0 L232.1 126.5" stroke="rgb(241,134,47)" stroke-width="8.4"/>
+    <path d="M97.8 140.7 L222.2 117.8" stroke="rgb(241,139,54)" stroke-width="8.4"/>
+    <path d="M109.5 132.1 L210.5 110.6" stroke="rgb(242,144,62)" stroke-width="8.4"/>
+    <path d="M122.8 122.2 L197.2 104.6" stroke="rgb(243,149,69)" stroke-width="8.4"/>
+    <path d="M137.2 111.2 L182.8 99.7" stroke="rgb(244,155,77)" stroke-width="8.4"/>
+    <path d="M152.3 99.5 L167.7 95.5" stroke="rgb(244,160,84)" stroke-width="8.4"/>
+    <path d="M167.7 91.6 L152.3 87.6" stroke="rgb(245,165,92)" stroke-width="8.4"/>
+    <path d="M182.8 87.4 L137.2 75.9" stroke="rgb(246,170,100)" stroke-width="8.4"/>
+    <path d="M197.2 82.5 L122.8 64.9" stroke="rgb(246,175,107)" stroke-width="8.4"/>
+    <path d="M210.5 76.5 L109.5 55.0" stroke="rgb(247,180,115)" stroke-width="8.4"/>
+    <path d="M222.2 69.3 L97.8 46.4" stroke="rgb(248,185,122)" stroke-width="8.4"/>
+    <path d="M232.1 60.6 L87.9 39.1" stroke="rgb(249,190,130)" stroke-width="8.4"/>
+    <path d="M239.8 50.7 L80.2 33.2" stroke="rgb(249,195,137)" stroke-width="8.4"/>
+    <path d="M245.0 39.7 L75.0 28.3" stroke="rgb(250,200,145)" stroke-width="8.4"/>
+  </g>
+</svg>

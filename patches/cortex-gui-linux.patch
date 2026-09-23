@@ -1,0 +1,39 @@
+--- a/fractal-cortex/fractal_widgets.py
++++ b/fractal-cortex/fractal_widgets.py
+@@ -913,7 +913,7 @@
+ """ CHECKBOX CLASS """
+ 
+ class Checkbox(glooey.Checkbox):
+-    pyglet.resource.path = [".", "image_resources/Checkbox_Images"]
++    pyglet.resource.path = [".", "image_resources/CheckBox_Images"]
+     pyglet.resource.reindex()
+     custom_checked_base = pyglet.resource.image("checkedBase.png")
+     custom_checked_over = pyglet.resource.image("checkedOver.png")
+--- a/fractal-cortex/widget_functions.py
++++ b/fractal-cortex/widget_functions.py
+@@ -1169,9 +1169,9 @@
+     ),
+     rotate=Entry_Box(str(rotateY), rotateBounds[0], rotateBounds[1], "°CCW"),
+     scale=Unlabeled_Image_Button(
+-        "image_resources/apply_Button_Images/Base.png",
+-        "image_resources/apply_Button_Images/Over.png",
+-        "image_resources/apply_Button_Images/Down.png",
++        "image_resources/apply_Button_Images/base.png",
++        "image_resources/apply_Button_Images/over.png",
++        "image_resources/apply_Button_Images/down.png",
+         apply_placeholder,
+         [],
+     ),
+@@ -1188,9 +1188,9 @@
+     blank=Widget_Label(""),
+     translate=Entry_Box(str(translateZ), zBounds[0], zBounds[1], "mm"),
+     rotate=Unlabeled_Image_Button(
+-        "image_resources/apply_Button_Images/Base.png",
+-        "image_resources/apply_Button_Images/Over.png",
+-        "image_resources/apply_Button_Images/Down.png",
++        "image_resources/apply_Button_Images/base.png",
++        "image_resources/apply_Button_Images/over.png",
++        "image_resources/apply_Button_Images/down.png",
+         apply_placeholder,
+         [],
+     ),
