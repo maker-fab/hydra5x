@@ -37,3 +37,7 @@ results/gcode/*
 # --- Systeme ---
 .DS_Store
 Thumbs.db
+
+# Chunks et comparaisons : regeneres par tools/export_chunks.py
+results/chunks/
+results/comparaison/
