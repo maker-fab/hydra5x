@@ -470,6 +470,65 @@ chiffrees.
 
 ---
 
+## D12 — L'argument de tenue mecanique ne tient pas non plus
+
+D11 laissait l'orientation des couches comme dernier argument : « en
+multidirectionnel les couches suivent la courbe, donc le coude delamine
+moins ». **C'est faux, et l'inverse est vrai.**
+
+**Methode** : `tools/fea_bending.py`, solveur elements finis ecrit ici pour
+pouvoir etre valide. Coude creux (r_int 4, r_ext 6, courbure 30, 90°),
+encastre a la base, charge verticale en bout. Champ de contraintes calcule
+une fois en elastique isotrope, puis projete sur deux champs d'orientation
+de couches via `sigma_n = n . sigma . n` -- une piece imprimee casse entre
+les couches, pas dans le plan d'une couche.
+
+**Validation du solveur** : poutre tubulaire encastree contre
+Euler-Bernoulli. Convergence monotone par le bas -- 34,8 %, 19,0 %,
+10,2 %, **6,2 %** d'ecart en raffinant. Comportement attendu d'un
+tetraedre lineaire (verrouillage en cisaillement). La comparaison portant
+sur un rapport entre deux champs d'orientation appliques au MEME champ de
+contraintes, l'erreur de discretisation s'annule.
+
+**Resultat** :
+
+| zone | 3 axes | multidirectionnel | gain |
+|---|---|---|---|
+| piece entiere | 2,617 MPa | 2,617 MPa | 0,0 % |
+| virage seul | 1,745 MPa | 1,767 MPa | **-1,2 %** |
+| partie droite | 2,617 MPa | 2,617 MPa | 0,0 % |
+
+**Pourquoi l'intuition etait fausse** : en multidirectionnel, chaque chunk
+est pose sur son plan de coupe, lequel est **perpendiculaire** a l'axe du
+tube. Les couches ne suivent pas la courbe, elles s'empilent le long du
+tube. Une contrainte axiale de flexion tire droit a travers les interfaces.
+En 3 axes les couches sont horizontales : dans la partie couchee du coude
+elles sont **paralleles** a l'axe, donc bien orientees contre l'effort.
+
+Le pic global tombe a l'encastrement (station 0), dans la partie droite
+verticale, identique dans les deux schemas -- d'ou le 0,0 % sur la piece
+entiere.
+
+**Portee du resultat** : un cas de charge, une geometrie. Une piece dont la
+direction d'impression multidirectionnelle s'aligne avec l'effort
+principal y gagnerait. Mais pour un tube en flexion -- le cas d'ecole du
+multidirectionnel -- le gain est nul a legerement negatif.
+
+**Ou en est la justification du multidirectionnel** :
+
+| argument | statut |
+|---|---|
+| economie de matiere | mesure : **17 %** (D11) |
+| tenue mecanique | mesure : **nulle a -1,2 %** |
+| support irretirable | non mesure, valeur binaire |
+| etat de surface | non mesure |
+
+Il ne reste que le support irretirable -- canaux internes, cavites fermees.
+C'est un argument reel mais etroit : il ne concerne pas les pieces qu'on
+peut desupporter, donc la plupart.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
