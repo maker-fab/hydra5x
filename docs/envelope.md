@@ -185,6 +185,47 @@ d'être le facteur limitant.
 Cortex non reconstituable depuis son code et jamais confronté à une
 distance géométrique réelle. À vérifier sur le matériel.
 
+## Encombrement de la tête : ce qui borne vraiment
+
+`tools/encombrement_tete.py`. Pivot au bout de la buse, chaque obstacle
+réduit à son débord latéral `w` et sa hauteur `d` au-dessus de la pointe :
+
+```
+θ_max = arctan( d / w )
+```
+
+| obstacle | w | d | limite |
+|---|---|---|---|
+| **chaussette silicone** | 12 mm | 4 mm | **18,4°** |
+| buse de ventilation pièce | 14 mm | 6 mm | 23,2° |
+| coin bas du bloc Volcano | 10 mm | 4,5 mm | 24,2° |
+| dissipateur | 15 mm | 16 mm | 46,8° |
+| moteur direct drive | 30 mm | 45 mm | 56,3° |
+| moteur LGX Lite compact | 25 mm | 40 mm | 58,0° |
+
+**Le direct drive et l'électronique ne bornent rien.** Les déporter achète
+de la masse et du câblage, pas un degré. `arctan(d/w)` est très favorable
+dès qu'un obstacle est haut.
+
+**Ce qui borne la machine tient dans un cylindre de 14 mm de rayon et 6 mm
+de haut autour de la pointe.** Et les trois obstacles qui s'y trouvent sont
+bon marché à traiter :
+
+| | gain | coût |
+|---|---|---|
+| retirer la chaussette silicone | 18,4° → 23,2° | quelques euros |
+| déporter la ventilation par conduit | 23,2° → 24,2° | une pièce imprimée |
+| chanfreiner le coin du bloc | 24,2° → **46,8°** | une lime |
+
+Les trois traités, le facteur limitant devient le dissipateur à **46,8°** —
+au-delà des 45° utiles. **La tête pourrait alors fournir toute
+l'inclinaison seule**, et la garde plateau-buse cesserait d'être un sujet.
+
+**Réserve** : la protrusion de buse sous le bloc n'est pas publiée par E3D.
+Les valeurs de `d` sont estimées. Le bloc Volcano 20×20×11,5 mm est
+confirmé. Le tableau de sensibilité de l'outil vaut mieux que les valeurs
+absolues — à relever au pied à coulisse.
+
 ## Piste v2 — tête inclinable
 
 Ajouter une inclinaison de tête bornée, en gardant la TRT : machine à
