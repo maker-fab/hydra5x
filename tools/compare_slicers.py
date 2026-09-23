@@ -109,25 +109,71 @@ def trancher_cortex(stl, sortie, hauteur_couche=0.2):
     return sortie
 
 
-def trancher_orca(binaire, stl, sortie, hauteur_couche=0.2, profil=None):
-    """Appelle OrcaSlicer en ligne de commande.
+def trancher_prusa(binaire, stl, sortie, hauteur_couche=0.2, profil=None):
+    """PrusaSlicer en CLI. Les reglages passent en options directes, ce qui
+    evite toute la machinerie de prereglages."""
+    cmd = [
+        str(binaire), "--export-gcode", "--output", str(sortie),
+        "--layer-height", str(hauteur_couche),
+        "--first-layer-height", str(hauteur_couche),
+        "--fill-density", "20%",
+        "--perimeters", "2",
+        "--temperature", "210",
+        "--first-layer-temperature", "215",
+        "--bed-temperature", "60",
+        "--first-layer-bed-temperature", "60",
+        "--retract-length", "5",
+        "--retract-speed", "40",
+        "--support-material", "0",
+        "--brim-width", "0",
+        "--skirts", "0",
+        "--nozzle-diameter", "0.4",
+    ]
+    if profil:
+        cmd += ["--load", str(profil)]
+    cmd.append(str(stl))
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    if not Path(sortie).exists():
+        raise RuntimeError(
+            "PrusaSlicer n'a produit aucun G-code.\n"
+            f"  commande : {' '.join(cmd)}\n"
+            f"  code     : {proc.returncode}\n"
+            f"  stdout   : {proc.stdout[-800:]}\n"
+            f"  stderr   : {proc.stderr[-800:]}"
+        )
+    return sortie
 
-    Orca ecrit dans un dossier de sortie, pas vers un fichier nomme : on
-    passe par un dossier temporaire puis on recupere le seul .gcode produit.
+
+def trancher_orca(binaire, stl, sortie, hauteur_couche=0.2, profil=None):
+    """OrcaSlicer en CLI.
+
+    ATTENTION : bloque sur la 2.4.2 et anterieures. Le controle de
+    compatibilite process/machine de la CLI compare des noms litteraux la ou
+    l'interface evalue `compatible_printers_condition` ; toute paire de
+    prereglages chargee par --load-settings sort en CLI_PROCESS_NOT_COMPATIBLE
+    (-17), avant meme la moindre action. Le correctif est sur `main` en amont,
+    dans aucune version publiee. Voir docs/decisions.md D8.
+
+    Sans --profil, Orca echoue plus tot encore (-51) : son profil par defaut
+    combine E relatif et layer_gcode vide, combinaison qu'il refuse lui-meme.
     """
+    if not profil:
+        raise RuntimeError(
+            "OrcaSlicer exige un couple de prereglages machine+process "
+            "(--profil). Sans lui il refuse son propre profil par defaut."
+        )
     with tempfile.TemporaryDirectory() as tmp:
-        cmd = [str(binaire), str(stl), "--slice", "0", "--outputdir", tmp]
-        if profil:
-            cmd += ["--load-settings", str(profil)]
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        produits = list(Path(tmp).glob("*.gcode")) + list(Path(tmp).glob("*.gcode.3mf"))
+        cmd = [str(binaire), str(stl), "--load-settings", str(profil),
+               "--slice", "0", "--outputdir", tmp]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        produits = list(Path(tmp).glob("*.gcode"))
         if not produits:
             raise RuntimeError(
                 "OrcaSlicer n'a produit aucun G-code.\n"
                 f"  commande : {' '.join(cmd)}\n"
                 f"  code     : {proc.returncode}\n"
-                f"  stdout   : {proc.stdout[-800:]}\n"
-                f"  stderr   : {proc.stderr[-800:]}"
+                f"  stdout   : {proc.stdout[-500:]}\n"
+                f"  stderr   : {proc.stderr[-500:]}"
             )
         Path(sortie).write_bytes(produits[0].read_bytes())
     return sortie
@@ -149,9 +195,11 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("stl", type=Path, help="chunk STL pose a plat")
     ap.add_argument("--orca", type=Path, default=None,
-                    help="binaire OrcaSlicer ; absent, seul Cortex est mesure")
+                    help="binaire OrcaSlicer (bloque en 2.4.2, voir decisions.md D8)")
+    ap.add_argument("--prusa", type=Path, default=None,
+                    help="binaire PrusaSlicer, p.ex. /usr/bin/prusa-slicer")
     ap.add_argument("--profil", type=Path, default=None,
-                    help="profil de reglages Orca (.json)")
+                    help="fichier de reglages a charger dans le slicer externe")
     ap.add_argument("--out", type=Path, default=Path("results/comparaison"))
     ap.add_argument("--couche", type=float, default=0.2)
     args = ap.parse_args()
@@ -166,16 +214,21 @@ def main():
     m_cortex = mesurer_gcode(g_cortex)
     afficher("Cortex", m_cortex)
 
-    if not args.orca:
-        print("\n  OrcaSlicer non fourni (--orca) : comparaison partielle.")
+    if args.prusa:
+        nom, g_ext = "PrusaSlicer", trancher_prusa(
+            args.prusa, args.stl, args.out / "prusa.gcode", args.couche, args.profil)
+    elif args.orca:
+        nom, g_ext = "OrcaSlicer", trancher_orca(
+            args.orca, args.stl, args.out / "orca.gcode", args.couche, args.profil)
+    else:
+        print("\n  Aucun slicer externe fourni (--prusa / --orca) : "
+              "comparaison partielle.")
         return 0
 
-    g_orca = trancher_orca(args.orca, args.stl, args.out / "orca.gcode",
-                           args.couche, args.profil)
-    m_orca = mesurer_gcode(g_orca)
-    afficher("OrcaSlicer", m_orca)
+    m_orca = mesurer_gcode(g_ext)
+    afficher(nom, m_orca)
 
-    print("\n  Ecarts (Orca par rapport a Cortex)")
+    print(f"\n  Ecarts ({nom} par rapport a Cortex)")
     for cle, libelle in (("filament_mm", "filament"),
                          ("extrusion_mm", "trajet extrude"),
                          ("vide_mm", "trajet a vide"),

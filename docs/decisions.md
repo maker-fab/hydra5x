@@ -153,6 +153,62 @@ est pire que pas de fork, il divise l'attention sans rien réparer.
 
 ---
 
+## D8 — Deleguer le tranchage des chunks a un slicer mature
+
+**Pourquoi la question se pose** : le coeur de Cortex fait 1 878 lignes.
+OrcaSlicer represente 49 Mo de C++, 880 contributeurs et quinze ans de
+lignee depuis Slic3r. Viser la parite fonctionnelle est une illusion.
+
+Mais un chunk pose a plat **est** une piece 3 axes ordinaire. D'ou le
+partage : Cortex garde la decomposition, la garde plateau-buse et la
+couture du G-code avec les reorientations — ce que personne d'autre ne
+fait. Un slicer mature tranche chaque chunk, avec ses perimetres, ses
+supports et ses profils.
+
+**Mesure sur le chunk principal du Y**, tranche par Cortex seul :
+
+| | |
+|---|---|
+| couches | 141 |
+| filament | 15 728 mm |
+| trajet extrude | 30 170 mm |
+| trajet a vide | 16 009 mm (53 % du trajet extrude) |
+| retractions | **2 946**, soit ~21 par couche |
+| infill | 83 s de calcul |
+
+2 946 retractions sur une piece quasi cylindrique et un deplacement a vide
+valant la moitie du trajet utile : marqueurs d'un ordonnancement faible.
+Un slicer mature fait du *combing* — il contourne en restant dans la piece
+plutot que de retracter.
+
+**Ce qui bloque la mesure comparative** : la CLI d'OrcaSlicer est
+inutilisable en 2.4.2. Son controle de compatibilite process/machine
+compare des noms litteraux la ou l'interface evalue
+`compatible_printers_condition` ; toute paire de prereglages passee par
+`--load-settings` sort en `CLI_PROCESS_NOT_COMPATIBLE` (-17) avant meme
+la moindre action, `--export-3mf` compris. Le defaut est decrit dans leur
+propre code sur `main`, symptome et code de sortie compris ; le correctif
+n'est dans aucune version publiee — ni la 2.4.2 du 7 juillet 2026, ni la
+nightly, qui date de 2024.
+
+Quatre configurations tentees : prereglages aplatis, heritage conserve,
+compatibilite recablee explicitement, `--datadir` dedie. Meme code a
+chaque fois. Sans prereglage du tout, Orca echoue plus tot encore (-51) :
+son profil par defaut combine E relatif et `layer_gcode` vide,
+combinaison qu'il refuse lui-meme.
+
+**Ce que ca change pour l'architecture** : les options necessaires existent
+bien (`--rotate_x`, `--cut`, `--ground_face_normal`), mais la CLI d'Orca
+est une surface mal maintenue. Y adosser la chaine, c'est en heriter la
+fragilite. La mesure passe donc par **PrusaSlicer**, meme lignee, CLI
+stable depuis quinze ans, disponible en paquet distribution.
+
+**Ce que la delegation ne resoudra pas** : aucun slicer 3 axes ne connait
+le plateau incline. La collision entre la buse et la matiere deja deposee
+reste entierement a la charge de ce projet.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
