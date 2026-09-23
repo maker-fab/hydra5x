@@ -22,8 +22,9 @@ disait « écarté » avant toute mesure.
 
 | Emprunt | Source | Résout | Statut |
 |---|---|---|---|
-| Tranchage courbe aligné sur les contraintes | [S³-Slicer](https://dl.acm.org/doi/10.1145/3550454.3555516), BSD-3 · [code](https://github.com/zhangty019/S3_DeformFDM) | +176 % à la rupture, là où le multidirectionnel planaire donne 0 | **à évaluer** — l'argument mécanique du projet en dépend |
-| Tranchage neuronal multi-axes | [NeuralSlicer](https://github.com/RyanTaoLiu/NeuralSlicer), **GPL-3.0** | idem, licence directement combinable | **à évaluer** |
+| **Tranchage non-planaire générique** | **[S4 Slicer](https://github.com/jyjblrd/S4_Slicer), GPL-3.0**, 951 ★, maj 2025-04 | couches courbes continues, sans support. **Un seul notebook Python** : numpy, scipy, networkx, open3d, pyvista, tetgen, pygcode. Aucun CUDA, Qt ni MKL | **retenu pour évaluation** — le seul utilisable des trois |
+| Tranchage courbe aligné sur les contraintes | [S³-Slicer](https://dl.acm.org/doi/10.1145/3550454.3555516), BSD-3 · [code](https://github.com/zhangty019/S3_DeformFDM) | +176 % à la rupture | **écarté en pratique** — Windows + Visual Studio + Qt + Intel oneMKL, piloté par une séquence de boutons dans une interface. Non scriptable |
+| Tranchage neuronal multi-axes | [NeuralSlicer](https://github.com/RyanTaoLiu/NeuralSlicer), GPL-3.0 | idem | **écarté en pratique** — exige de compiler S³ d'abord ET d'y **greffer un bouton à la main** dans `MainWindow.ui`, plus PyTorch 1.11 / CUDA 11.3 |
 | Découpe conforme | [Open5x](https://ar5iv.labs.arxiv.org/html/2202.11426) | référence du domaine | écarté — dépend de Rhino/Grasshopper, payant |
 | Non-planaire sur 3 axes | mods Slic3r / PrusaSlicer | état de surface, sans axe supplémentaire | à évaluer — utile même sans la machine |
 | Répartition table + tête | ce projet, `envelope_hybride.py` | les deux limites sont indépendantes et se cumulent | **retenu** |
@@ -38,6 +39,15 @@ disait « écarté » avant toute mesure.
 | Refroidissement annulaire | conduits intégrés haut débit | 51,8° au lieu de 23,2°, **et** supprime la dépendance à la direction | **retenu en principe** |
 | Chaussette silicone | — | à retirer ou redessiner : 18,4°, elle borne la machine pour quelques euros | à évaluer |
 | Extrudeur compact | LGX Lite, Sherpa Mini, Orbiter | masse sur tête mobile | **sans effet sur l'inclinaison** — mesuré à 56-58°, jamais limitant |
+
+**Sortie de S4 Slicer** : axes `X, Z, C, B`, pas de Y — cinématique Core
+R-Theta, la machine 4 axes de son auteur. `B` varie **en continu pendant le
+dépôt**, donc du non-planaire vrai, pas du multidirectionnel par blocs.
+
+Correspondance plausible vers la TRT de Fractal : `C→A`, `B→B`, `X→X`,
+`Z→Z`, `Y=0`. Une TRT est une R-Theta avec un axe de plus, donc elle
+devrait exécuter cette sortie telle quelle. **Non vérifié** — reste à
+confirmer ce que `B` incline sur sa machine, plateau ou tête.
 
 ## Mécanique
 
