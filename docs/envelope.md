@@ -215,16 +215,42 @@ bon marché à traiter :
 |---|---|---|
 | retirer la chaussette silicone | 18,4° → 23,2° | quelques euros |
 | déporter la ventilation par conduit | 23,2° → 24,2° | une pièce imprimée |
-| chanfreiner le coin du bloc | 24,2° → **46,8°** | une lime |
+| chanfreiner le coin du bloc | 24,2° → **32,7°** | une lime |
 
-Les trois traités, le facteur limitant devient le dissipateur à **46,8°** —
-au-delà des 45° utiles. **La tête pourrait alors fournir toute
-l'inclinaison seule**, et la garde plateau-buse cesserait d'être un sujet.
+Les trois traités, l'outil donne **32,7° bruts / 26,2° utiles** — le coin
+du bloc chanfreiné borne toujours. Atteindre le dissipateur à 46,8°
+demanderait un bloc de 8,4 mm de large, irréaliste sur un Volcano.
+
+**Correction** : une première rédaction annonçait 46,8° ici. C'était la
+conclusion écrite avant lecture du chiffre — la même erreur que sur
+l'orientation des couches (D12). 26,2° utiles restent un gain net contre
+14,7°, mais la tête ne fournit pas les 45° seule.
 
 **Réserve** : la protrusion de buse sous le bloc n'est pas publiée par E3D.
 Les valeurs de `d` sont estimées. Le bloc Volcano 20×20×11,5 mm est
 confirmé. Le tableau de sensibilité de l'outil vaut mieux que les valeurs
 absolues — à relever au pied à coulisse.
+
+### Refroidissement annulaire : pas une optimisation, une nécessité
+
+| solution | w | d | limite |
+|---|---|---|---|
+| buse latérale classique | 14 mm | 6 mm | 23,2° |
+| conduit déporté, sortie à 10 mm | 12 mm | 10 mm | 39,8° |
+| **canaux annulaires type turbine** | 11 mm | 14 mm | **51,8°** |
+| canaux intégrés au dissipateur | 15 mm | 16 mm | 46,8° |
+
+Le gain d'encombrement est réel — 51,8° sort le refroidissement de la liste
+des contraintes. **Mais ce n'est pas l'argument principal.**
+
+Une buse latérale souffle d'un seul côté. Sur une tête qui bascule et
+tourne, la direction du refroidissement varie par rapport au cordon déposé
+selon l'orientation, et à 30° d'inclinaison une partie du flux passe à
+côté. Des canaux annulaires sont symétriques de révolution : indépendants
+de l'inclinaison comme de la rotation.
+
+Le refroidissement directionnel est déjà un défaut connu en 3 axes — d'où
+les conduits doubles. Il devient **structurel** dès que la tête s'oriente.
 
 ## Piste v2 — tête inclinable
 
