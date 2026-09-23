@@ -21,17 +21,28 @@ from export_chunks import decouper, spherical_to_normal, transform_a_plat  # noq
 from check_collision import carte_hauteurs, disque  # noqa: E402
 
 
+class SectionIllisible(Exception):
+    """Section que trimesh ne sait pas reduire en polygones."""
+
+
 def points_de_section(maillage, z, pas=1.0):
-    """Grille de points a l'interieur de la section du maillage a l'altitude z."""
+    """Grille de points a l'interieur de la section du maillage a l'altitude z.
+
+    `polygons_full` est une propriete paresseuse : elle leve a l'acces, pas
+    a la construction. L'englober est indispensable, et l'echec doit
+    REMONTER -- une section avalee en silence rendrait le test aveugle sur
+    cette couche et produirait un "pas de collision" sans fondement.
+    """
     try:
         coupe = maillage.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
         if coupe is None:
             return np.empty((0, 3))
         plan, _ = coupe.to_planar()
-    except Exception:
-        return np.empty((0, 3))
+        polygones = list(plan.polygons_full)
+    except Exception as e:
+        raise SectionIllisible(f"section a z={z:.2f} : {e}") from e
     pts = []
-    for polygone in plan.polygons_full:
+    for polygone in polygones:
         x0, y0, x1, y1 = polygone.bounds
         xs = np.arange(x0, x1 + pas, pas)
         ys = np.arange(y0, y1 + pas, pas)
@@ -50,8 +61,14 @@ def penetration_max(deja, chunk, alpha, rayon, couche=0.2, pas_test=1.0):
     nx, ny = grille.shape
     zmin, zmax = chunk.bounds[0][2], chunk.bounds[1][2]
     pire, ou = 0.0, None
+    sautees = 0
     for z in np.arange(zmin + couche, zmax, max(couche, 0.4)):
-        for x, y, zz in points_de_section(chunk, z, pas_test):
+        try:
+            points = points_de_section(chunk, z, pas_test)
+        except SectionIllisible:
+            sautees += 1
+            continue
+        for x, y, zz in points:
             ix = int((x - x0) / pas) + dx
             iy = int((y - y0) / pas) + dy
             ok = (ix >= 0) & (ix < nx) & (iy >= 0) & (iy < ny)
@@ -61,6 +78,9 @@ def penetration_max(deja, chunk, alpha, rayon, couche=0.2, pas_test=1.0):
             m = float(d.max())
             if m > pire:
                 pire, ou = m, (float(x), float(y), float(zz))
+    if sautees:
+        print(f"      ATTENTION : {sautees} section(s) illisible(s), "
+              f"non testees")
     return pire, ou
 
 
