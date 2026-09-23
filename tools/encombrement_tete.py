@@ -90,11 +90,63 @@ NON_CONTRAIGNANTS = [
 ]
 
 
+COTES_A_RELEVER = """
+Quatre cotes a prendre au pied a coulisse. Origine = POINTE de la buse.
+
+  1. protrusion    hauteur de la face basse du bloc au-dessus de la pointe
+  2. bloc          plus grande demi-DIAGONALE du bloc, pas la demi-largeur
+                   (un bloc 20x20 mesure 14,1 et non 10)
+  3. chaussette    debord lateral max de la chaussette, et sa hauteur
+  4. ventilation   debord lateral max de la buse de refroidissement,
+                   et sa hauteur au-dessus de la pointe
+
+Tout obstacle plus haut que ~20 mm est sans effet : arctan(d/w) lui est
+tres favorable. Inutile de mesurer le dissipateur ou l'extrudeur.
+"""
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--marge", type=float, default=0.80)
+    ap.add_argument("--cotes", action="store_true",
+                    help="afficher ce qu'il faut mesurer, et sortir")
+    ap.add_argument("--protrusion", type=float,
+                    help="hauteur de la face basse du bloc au-dessus de la pointe, mm")
+    ap.add_argument("--bloc", type=float,
+                    help="demi-diagonale du bloc, mm")
+    ap.add_argument("--chaussette", type=float, nargs=2, metavar=("W", "D"),
+                    help="debord et hauteur de la chaussette, mm")
+    ap.add_argument("--ventilation", type=float, nargs=2, metavar=("W", "D"),
+                    help="debord et hauteur de la buse de refroidissement, mm")
     args = ap.parse_args()
+
+    if args.cotes:
+        print(COTES_A_RELEVER)
+        return 0
+
+    if args.bloc and args.protrusion:
+        mesure = [("coin bas du bloc", args.bloc, args.protrusion)]
+        if args.chaussette:
+            mesure.append(("chaussette", args.chaussette[0], args.chaussette[1]))
+        if args.ventilation:
+            mesure.append(("ventilation", args.ventilation[0], args.ventilation[1]))
+        brut, cause = theta_max(mesure)
+        print("Hotend mesure\n")
+        for nom, w, d in mesure:
+            print(f"  {nom:<22s} w={w:5.1f} d={d:5.1f} -> "
+                  f"{np.degrees(np.arctan2(d, w)):5.1f}°")
+        print(f"\n  limite brute  {brut:5.1f}°")
+        print(f"  limite utile  {brut*args.marge:5.1f}°   (marge {args.marge*100:.0f} %)")
+        print(f"  facteur limitant : {cause}")
+        manque = max(0.0, 45.0 - brut * args.marge)
+        print(f"\n  reste a fournir par la table pour atteindre 45° : {manque:.1f}°")
+        if manque > 0:
+            z = 12.0 * np.sin(np.radians(manque / args.marge))
+            print(f"  -> hauteur minimale du point le plus bas : z >= {z:.2f} mm")
+        else:
+            print("  -> la tete suffit seule, la garde plateau-buse ne mord plus")
+        return 0
 
     print("Inclinaison maximale de tete, par hotend\n")
     print(f"  {'hotend':<26s} {'brut':>7s} {'utile':>7s}   facteur limitant")
