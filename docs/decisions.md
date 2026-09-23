@@ -690,6 +690,68 @@ justifié par la mesure -- seulement par la disponibilité.
 
 ---
 
+## D16 — La plage d'inclinaison EST la specification de la machine
+
+Question posee : a quoi sert de s'incliner au-dela de 90°, et pour quelle
+piece ? La reponse relie plusieurs fils laisses separes.
+
+**Le raisonnement des 45° est juste mais incomplet.** « 45° couvrent
+tout » (envelope.md) vaut pour l'angle entre la normale d'une surface et la
+direction de construction. Ce que la machine execute, c'est l'angle entre
+les directions de deux chunks SUCCESSIFS. Ces deux-la peuvent etre
+opposees.
+
+**La piece qui exige plus de 90° est le re-entrant.** Un crochet : la tige
+monte, la courbe revient vers le bas, sa face interne regarde vers le
+bas-dedans. Pour l'imprimer a plat il faut tourner de plus de 90° par
+rapport a la tige. Meme chose pour un C, une barbelure, une levre
+interieure.
+
+**Et c'est exactement le cas du support irretirable de D13.** Un re-entrant
+est precisement ce qui piege le support. Le seul argument binaire du projet
+et l'exigence des 90° sont **la meme chose**, formulee deux fois.
+
+**Ce que ca coute.** Au-dela de 90° la piece est retournee : l'adherence au
+plateau ne la tient plus, il faut du bridage mecanique. Ce n'est plus un
+reglage, c'est une autre classe de machine. Cortex borne d'ailleurs son
+champ d'angle a 0-90° (`widget_functions.py`, `S_theta`) : au-dela n'est
+pas exprimable dans l'outil.
+
+**L'asymetrie gravitaire, non formulee jusqu'ici, y compris dans D2** :
+
+- **TRT** : la buse reste verticale, le plan de coupe devient horizontal.
+  La gravite presse le cordon sur la couche precedente **a toute
+  inclinaison**.
+- **tete-tete** : la piece reste a plat, la couche deposee est inclinee de
+  B. La gravite a une composante **dans le plan de la couche**, le cordon
+  fondu glisse. A 90° il faudrait adherer sur un mur vertical.
+
+C'est un argument fort pour le TRT que D2 n'avait pas identifie -- il avait
+choisi sur la dynamique et la disponibilite. Et ca nuance D15, qui ne
+regardait que la collision.
+
+**La specification qui decoule** :
+
+| plage de B | ce que ca couvre | ce que ca exige |
+|---|---|---|
+| **0 a ~50°** | tous les surplombs, sans exception | adherence au plateau suffit ; mecanisme simple et rigide |
+| 50 a 90° | rien de plus en surplomb | inutile |
+| **au-dela de 90°** | les re-entrants, donc le support irretirable | bridage mecanique, slicer a ecrire, autre classe de machine |
+
+**La plage d'inclinaison est donc la decision structurante**, pas la
+configuration cinematique. Elle determine le bridage, la rigidite, le cout,
+et si le seul argument binaire du projet est dans le perimetre ou non.
+
+**Ce qu'il faut trancher** : le re-entrant est-il dans le perimetre ?
+
+- **Non** : borner a ~50°, et la machine se simplifie considerablement.
+  Mais D11 a D13 ont montre que les autres arguments -- matiere, mecanique
+  -- ne la justifient pas. Une machine simple pour un gain de 17 %.
+- **Oui** : c'est le seul argument qui tienne, et il impose une machine que
+  personne ne fabrique et un slicer que personne n'a ecrit.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
