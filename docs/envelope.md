@@ -233,9 +233,17 @@ absolues — à relever au pied à coulisse.
 
 ### Mesure réelle : CHC Pro, depuis sa CAO
 
-`tools/mesurer_tete.py` sur `docs/cao/chc_pro_hotend.stp`. Profil de
-silhouette `h(r)` = hauteur minimale de matière à la distance `r` de l'axe,
-puis `θ_max = min_r arctan(h(r)/r)`.
+`tools/mesurer_tete.py` sur le STEP du CHC Pro, récupéré depuis
+[Printables](https://www.printables.com/model/595187-triangle-labs-chc-pro-hotend).
+**Le fichier n'est pas redistribué ici** — CAO tierce, licence non vérifiée,
+même raison qui écarte de vendoriser Cortex. À télécharger pour reproduire :
+
+```bash
+.venv-dxf/bin/python3 tools/mesurer_tete.py "CHC Pro Hotend.stp"
+```
+
+Profil de silhouette `h(r)` = hauteur minimale de matière à la distance `r`
+de l'axe, puis `θ_max = min_r arctan(h(r)/r)`.
 
 | rayon | hauteur | angle | quoi |
 |---|---|---|---|
