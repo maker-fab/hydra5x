@@ -375,6 +375,56 @@ les chunks reorientes font moins de 2 % du volume.
 
 ---
 
+## D10 — Le critere geometrique : rien ne doit depasser le plan de base
+
+En cherchant une decoupe imprimable du Y, une regle est tombee, et elle
+gouverne tout le reste.
+
+**Mesure**, tronc contre premier bras, plan de coupe fixe a z=24 :
+
+| theta | H tronc | H.sin(theta) | penetration | pen/H |
+|---|---|---|---|---|
+| 15° | 6,65 | 1,72 | 5,75 | 0,86 |
+| 25° | 7,03 | 2,97 | 6,54 | 0,93 |
+| 35° | 9,61 | 5,51 | 9,24 | 0,96 |
+| 45° | 7,78 | 5,50 | 6,82 | 0,88 |
+| 60° | 22,33 | 19,34 | 19,79 | 0,89 |
+
+`H` = hauteur dont le tronc depasse le plan de base du chunk, apres
+reorientation. **La penetration vaut 0,9 x H sur toute la plage, et ne
+depend pas de l'angle.** L'hypothese intuitive -- une dependance en
+`H.sin(theta)`, la matiere qui "se couche" -- est fausse : le rapport y
+varie de 3,34 a 1,02 alors qu'il reste plat contre `H`.
+
+**Pourquoi** : le mur se dresse *a cote* de la buse, pas au-dessus. Le cone
+n'autorise que `r/tan(alpha)` de garde a distance `r`, et `r` est petit
+quand la matiere est adjacente. La penetration vaut donc la hauteur du mur,
+un point c'est tout.
+
+**Le critere qui en decoule**, verifiable sur la geometrie seule, sans
+trancher ni simuler :
+
+> Apres reorientation, **rien de ce qui est deja imprime ne doit depasser
+> le plan de base du nouveau chunk** a proximite de celui-ci.
+
+**Ce que ca dit des pieces** : une branche qui part du MILIEU d'une forme
+plus haute est structurellement incompatible avec la decoupe par
+demi-espaces en TRT. Y, T, X : le tronc depasse toujours le plan de base du
+bras, quel que soit l'angle, quelle que soit la hauteur de coupe, quel que
+soit le nombre de paliers. Ce n'est pas un defaut de reglage.
+
+Les geometries qui conviennent sont celles dont les chunks successifs
+montent de facon monotone -- helice, tube coude, arche imprimee depuis une
+extremite. A chaque reorientation, le deja-imprime reste sous le plan de
+base du suivant.
+
+**Consequence pour le projet** : le Y n'est pas seulement une mauvaise piece
+de demonstration parce qu'il n'a pas besoin du multidirectionnel (D9). Il
+appartient a la famille que cette cinematique ne sait pas faire. Il faut
+une piece de test de l'autre famille.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
