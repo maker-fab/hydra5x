@@ -63,29 +63,30 @@ sudo apt install -y libgl1 libglu1-mesa
 
 ---
 
-## 1. Récupérer Cortex et appliquer les correctifs
-
-Fractal Cortex est le slicer multidirectionnel. Il est
-[abandonné depuis juillet 2025](https://github.com/fractalrobotics/Fractal-Cortex)
-et **ne démarre pas sous Linux** en l'état.
+## 1. Récupérer le slicer
 
 ```bash
-git clone --depth 1 https://github.com/fractalrobotics/Fractal-Cortex.git cortex
-cd cortex
-git apply ../patches/cortex-gui-linux.patch
-git apply ../patches/cortex-fixes.patch
-cd ..
+git clone https://github.com/maker-fab/hydra5x-slicer.git cortex
 ```
 
-`git apply` plutôt que `patch` : disponible partout où le clone l'est,
-Windows compris.
+C'est tout — les correctifs sont dans le dépôt, il n'y a plus rien à
+patcher.
 
-`cortex-gui-linux.patch` corrige 4 erreurs de casse dans les chemins de
-ressources — sans effet sur un système de fichiers insensible à la casse
-(Windows, macOS par défaut), bloquantes sous Linux et sur un APFS
-sensible à la casse. `cortex-fixes.patch` corrige le masquage d'erreurs,
-les caps dégénérés et les refus de collision opaques. Détail dans
-[`cortex-notes.md`](cortex-notes.md).
+[HYDRA5X Slicer](https://github.com/maker-fab/hydra5x-slicer) est un fork
+maintenu de [Fractal Cortex](https://github.com/fractalrobotics/Fractal-Cortex),
+créé par Fractal Robotics. L'amont est inactif depuis juillet 2025 et son
+code **ne démarre pas sous Linux** en l'état : quatre chemins de
+ressources sont écrits avec une casse qui ne correspond pas aux fichiers
+réels. Sans effet sur un système de fichiers insensible à la casse
+(Windows, macOS par défaut), bloquant sous Linux.
+
+Le fork corrige aussi le masquage d'erreurs, les caps dégénérés et les
+refus de collision opaques. Détail dans
+[`cortex-notes.md`](cortex-notes.md), et les correctifs restent proposés
+en amont via la [PR #4](https://github.com/fractalrobotics/Fractal-Cortex/pull/4).
+
+Le dossier s'appelle toujours `cortex` : les scripts de ce dépôt l'y
+cherchent.
 
 ---
 

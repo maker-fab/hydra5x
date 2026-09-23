@@ -39,23 +39,32 @@ Testé sur l'assemblage Fractal 5 Pro : 985 solides, 17 pièces en tôle,
 11 DXF exploitables. Cache BREP — premier passage ~15 min, suivants
 instantanés.
 
-### `patches/` — 7 correctifs pour Fractal Cortex
+### [HYDRA5X Slicer](https://github.com/maker-fab/hydra5x-slicer) — le slicer, repris
 
 Le slicer multidirectionnel [Fractal Cortex](https://github.com/fractalrobotics/Fractal-Cortex)
-est le seul libre et utilisable, mais il est abandonné depuis juillet 2025
-et ne démarre pas sous Linux.
+de Fractal Robotics est le seul libre et utilisable. Il est **inactif
+depuis juillet 2025** — deux issues ouvertes en octobre 2025 sans réponse,
+et son code ne démarre pas sous Linux.
 
-- `cortex-gui-linux.patch` — 4 erreurs de casse qui empêchent le GUI de
-  s'ouvrir sur un système de fichiers sensible à la casse
-- `cortex-fixes.patch` — masquage d'erreurs, diagnostics, caps dégénérés,
-  refus de collision opaque
+Plutôt que d'entretenir une pile de correctifs à réappliquer, ce projet en
+**maintient un fork**, sous la même licence GPL-3.0 et avec le crédit qui
+revient à Fractal Robotics :
+
+- 4 erreurs de casse qui empêchent l'interface de s'ouvrir sur un système
+  de fichiers sensible à la casse
+- masquage d'erreurs, diagnostics contextualisés, caps dégénérés, refus de
+  collision opaque
 
 Non-régression vérifiée : G-code identique octet pour octet sur les cas qui
-fonctionnaient déjà. Proposés en amont :
-[PR #4](https://github.com/fractalrobotics/Fractal-Cortex/pull/4).
+fonctionnaient déjà. Les correctifs restent proposés en amont
+([PR #4](https://github.com/fractalrobotics/Fractal-Cortex/pull/4), toujours
+ouverte) — le fork est une reprise, pas une rupture.
+
+`patches/` conserve les correctifs sous forme de diffs, pour qui voudrait
+les appliquer au dépôt d'origine sans passer par le fork.
 
 `tools/requirements-cortex-headless.txt` liste les **5 dépendances absentes
-du README de Cortex** sans lesquelles l'installation échoue, plus les
+du README d'origine** sans lesquelles l'installation échoue, plus les
 versions à épingler.
 
 ### `kinematics/` — cinématique PENTA_AXIS validée
@@ -131,10 +140,10 @@ testparts/         STL de test
 results/           G-code de référence, captures
 ```
 
-`cortex/` n'est pas dans ce dépôt : c'est un projet GPL-3.0 tiers, que
-[`docs/install.md`](docs/install.md) fait cloner puis patcher à l'étape 1.
-Le redistribuer ici reviendrait à republier le travail d'un autre sous
-couvert du nôtre.
+`cortex/` n'est pas dans ce dépôt : c'est le slicer, qui vit dans son
+propre dépôt ([hydra5x-slicer](https://github.com/maker-fab/hydra5x-slicer))
+pour garder sa filiation GPL-3.0 avec Fractal Cortex lisible.
+[`docs/install.md`](docs/install.md) le clone à l'étape 1.
 
 ---
 

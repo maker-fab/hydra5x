@@ -1,7 +1,13 @@
-# Fractal Cortex — ce qu'il faut savoir avant de s'en servir
+# Le slicer — ce qu'il faut savoir avant de s'en servir
 
-[Dépôt](https://github.com/fractalrobotics/Fractal-Cortex) — GPL-3.0,
-Python, ~200 étoiles, 37 forks. **Abandonné depuis juillet 2025.**
+Amont : [Fractal Cortex](https://github.com/fractalrobotics/Fractal-Cortex)
+de Fractal Robotics — GPL-3.0, Python, ~200 étoiles, 37 forks.
+**Inactif depuis juillet 2025.**
+
+Ce projet en maintient un fork :
+[maker-fab/hydra5x-slicer](https://github.com/maker-fab/hydra5x-slicer).
+C'est lui que `docs/install.md` clone. Voir `decisions.md` D7 pour le
+pourquoi. Tout ce qui suit décrit le code des deux, sauf mention contraire.
 
 Seul slicer multidirectionnel libre et utilisable. Open5x exige
 Rhino/Grasshopper (payant), le non-planaire continu n'a que du code
@@ -21,9 +27,10 @@ Pour le GUI : `pyglet==1.5.28`, `glooey==0.3.6`, `PyOpenGL==3.1.0`, et
 `more_itertools==8.14.0` (la 11.x casse glooey avec
 `TypeError: unhashable type: 'dict'`).
 
-Plus `patches/cortex-gui-linux.patch` — sans lui le GUI ne démarre pas du
-tout sous Linux (4 erreurs de casse dans les chemins de ressources,
-invisibles sous Windows).
+Les 4 erreurs de casse dans les chemins de ressources — sans correction le
+GUI ne démarre pas du tout sous Linux, et elles sont invisibles sous
+Windows — sont déjà corrigées dans le fork. `patches/cortex-gui-linux.patch`
+les conserve en diff pour qui part du dépôt d'origine.
 
 ## Architecture
 
@@ -60,7 +67,8 @@ cœur en headless.
 
 ## Défauts corrigés
 
-`patches/cortex-fixes.patch`, 153 lignes, réapplicable
+Déjà dans le fork. `patches/cortex-fixes.patch`, 153 lignes, réapplicable
+au dépôt d'origine
 (`patch --dry-run` OK). Proposés en amont :
 [PR #4](https://github.com/fractalrobotics/Fractal-Cortex/pull/4).
 

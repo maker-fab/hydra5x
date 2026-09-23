@@ -118,6 +118,41 @@ restent la vente de matériel, de kits, de service et d'intégration.
 
 ---
 
+## D7 — Reprendre Cortex en fork maintenu
+
+**Pourquoi** : toute la chaîne repose sur un slicer inactif depuis le
+22 juillet 2025 — dernier commit sur le README seul, deux issues ouvertes
+en octobre 2025 sans réponse, PR #4 sans réaction. Dépendre d'un projet
+mort sans en assurer la maintenance, c'est reporter la panne, pas l'éviter.
+
+Le fork est [maker-fab/hydra5x-slicer](https://github.com/maker-fab/hydra5x-slicer),
+GPL-3.0 conservée, filiation GitHub conservée, crédit à Fractal Robotics
+explicite dans le README et modifications déclarées comme la licence
+l'exige. La PR amont reste ouverte : si Fractal Robotics revient, les
+correctifs les attendent.
+
+**Ce que la décision débloque, et qui n'était pas évident** :
+
+- **D4 s'inverse.** Le vrai correctif du figeage GUI — créer le pool de
+  processus une seule fois à l'import, avant que pyglet ne lance ses
+  threads — avait été jugé hors proportion : il fallait refondre 8 sites
+  d'appel dans le code d'un tiers, à re-patcher indéfiniment. En possédant
+  le code, l'objection tombe.
+- **Le verrou `numpy<2` devient attaquable.** `trimesh 4.3.1` utilise
+  `ndarray.ptp()`, supprimé dans NumPy 2, d'où les deux environnements
+  séparés. Monter trimesh est risqué — mais `test_limits.py` et les G-code
+  de référence octet pour octet existent déjà. Le harnais n'avait pas été
+  construit pour ça ; c'est pourtant lui qui rend la tentative raisonnable.
+
+**Chantiers, par rapport valeur/risque** : garde plateau-buse
+configurable, puis sortie du verrou `numpy<2`, puis figeage du GUI, puis
+collision buse-pièce — le seul vrai trou fonctionnel, et le plus dur.
+
+**Ce que ça coûte** : un engagement de maintenance. Un fork non maintenu
+est pire que pas de fork, il divise l'attention sans rien réparer.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
