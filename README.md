@@ -67,6 +67,33 @@ les appliquer au dépôt d'origine sans passer par le fork.
 du README d'origine** sans lesquelles l'installation échoue, plus les
 versions à épingler.
 
+### Chaîne hybride — trancher les chunks avec un slicer mature
+
+Un chunk posé à plat **est** une pièce 3 axes ordinaire. `export_chunks.py`
+l'écrit en STL, un slicer mature le tranche, `stitch_chunks.py` recoud le
+tout en G-code 5 axes avec le protocole machine de Cortex inchangé.
+
+```bash
+python3 tools/stitch_chunks.py --prusa /usr/bin/prusa-slicer
+```
+
+Mesuré sur la pièce en Y entière, contre Cortex seul :
+
+| | Cortex | cousu | |
+|---|---|---|---|
+| rétractions | 3 542 | 622 | **−82 %** |
+| trajet à vide | 52 % du trajet utile | 17 % | **−58 %** |
+| lignes de G-code | 100 499 | 37 728 | −63 % |
+
+Soit 4,3 rétractions par couche au lieu de 20,5. L'écart est structurel :
+un slicer mature contourne en restant dans la pièce là où Cortex lève et
+rétracte. Angles et vitesses A/B identiques au chiffre près à la référence
+— même machine, même `printer.cfg`.
+
+`compare_slicers.py` mesure les deux sorties dans le G-code lui-même, pas
+dans ce que les slicers annoncent. Raisonnement et pièges dans
+[`docs/decisions.md`](docs/decisions.md) D8.
+
 ### `kinematics/` — cinématique PENTA_AXIS validée
 
 Extraction autonome et testée de la cinématique 5 axes de Marlin, avec le
