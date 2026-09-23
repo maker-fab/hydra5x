@@ -9,8 +9,11 @@ sources.
 |---|---|
 | `hydra-logo.jpg` | logo principal, encre et aquarelle |
 | `hydra-croquis.jpg` | variante croquis technique |
-| `icon-32/64/128/256.png` | icônes rondes |
-| `hydra.ico` | icône Windows multi-résolution |
+| `icon-32/64/128/256.png` | icônes rondes, tirées du pack |
+| `hydra.ico` | icône Windows du pack, illustration complète |
+| `favicon.svg` | marque réduite, lisible en petit |
+| `favicon-16/32.png`, `favicon.ico` | déclinaisons du favicon |
+| `apple-touch-icon.png` | 180 px, écrans d'accueil iOS |
 
 ## Limites à connaître avant d'imprimer
 
@@ -27,7 +30,28 @@ vectorisation demanderait un redessin.
 
 **Le logo ne réduit pas.** À 64 px on devine la créature, à 32 px c'est une
 tache bleu-gris. C'est une illustration, pas une marque conçue pour les
-petites tailles — choix légitime, mais un favicon lisible reste à dessiner.
+petites tailles. `hydra.ico` et les `icon-*.png` du pack héritent de ce
+défaut — les garder pour les grands formats, pas pour un onglet.
+
+## Le favicon
+
+`favicon.svg` est dérivé du logo, pas inventé à côté : c'est le **museau
+de la tête droite**, extrait au seuil 100 et vectorisé.
+
+- cadrage source `(545, 245) → (665, 365)`, suréchantillonné ×8 avant seuillage
+- **une seule forme claire** sur disque d'encre, plus l'œil
+- œil `#1f6fb2` en `cx=225 cy=212`, position mesurée par détection de teinte
+
+Deux choses apprises en le faisant, utiles si quelqu'un refait le travail :
+
+- **Sélectionner « les plus grandes formes » ne marche pas.** Les deux
+  plus grandes zones claires sont le papier autour de la tête, pas la
+  tête. Il faut identifier les masses par leur contenu.
+- **Ajouter une deuxième forme dessert.** Le croc devient un îlot détaché
+  qui se lit comme une tache. Une masse claire creusée par l'encre — la
+  gueule ouverte est un vide, pas un objet — reste plus net à 16 px.
+
+2,4 Ko et une seule courbe, contre 13 Ko et quatorze pour la tête entière.
 
 ## Points à trancher
 
