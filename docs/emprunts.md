@@ -10,6 +10,10 @@ On n'invente que ce qui n'existe nulle part.
 **Statuts** : `à évaluer` · `retenu` · `écarté` avec la raison · `bloqué`
 avec ce qui manque.
 
+**Critère transverse** : un composant fermé se disqualifie tout seul dès
+qu'il porte un paramètre qu'on doit régler. Ce n'est pas une position sur
+le logiciel libre, c'est une contrainte d'ingénierie — voir la ligne Revo.
+
 ---
 
 ## Cinématique et trajectoires
@@ -26,7 +30,8 @@ avec ce qui manque.
 
 | Emprunt | Source | Résout | Statut |
 |---|---|---|---|
-| Chauffage annulaire céramique | E3D Revo, Phaetus Rapido | permet un bloc étroit : la cartouche Ø6 posée à côté du canal interdisait de descendre sous ~Ø16 | **retenu en principe** — cotes à relever |
+| Chauffage annulaire céramique | Phaetus Rapido | supprime la cartouche Ø6 posée à côté du canal, qui interdisait de descendre sous ~Ø16 | **retenu en principe** — cotes à relever |
+| E3D Revo | — | changement de buse à froid en moins d'une minute | **écarté** — même encombrement qu'un V6, donc aucun gain ; et surtout **système fermé et breveté**, buses propriétaires à 27 €. On ne peut plus modifier la protrusion de buse, qui est un levier de conception (`encombrement_tete.py`). Un système fermé supprime le paramètre qu'on doit régler. |
 | Bloc cylindrique | Rapido | supprime la direction défavorable ; sur une tête qui tourne, un bloc carré présente tôt ou tard sa diagonale | **retenu en principe** |
 | Refroidissement annulaire | conduits intégrés haut débit | 51,8° au lieu de 23,2°, **et** supprime la dépendance à la direction | **retenu en principe** |
 | Chaussette silicone | — | à retirer ou redessiner : 18,4°, elle borne la machine pour quelques euros | à évaluer |
