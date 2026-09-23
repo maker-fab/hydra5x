@@ -74,8 +74,23 @@ def nettoyer(morceau, seuil=VOLUME_ECLAT):
     return trimesh.util.concatenate(gardees) if len(gardees) > 1 else gardees[0]
 
 
-def decouper(maillage, directions, departs):
-    """Reproduit create_chunkList() de Cortex."""
+def decouper(maillage, directions, departs, mode="cortex"):
+    """Decompose le maillage en chunks.
+
+    `mode="cortex"` reproduit create_chunkList() : chunk k = demi-espace k
+    moins TOUS les demi-espaces ulterieurs. Quand les plans ne sont pas
+    emboites -- des qu'ils s'inclinent le long d'une courbe -- la matiere
+    qu'aucun plan ulterieur ne reclame retombe dans le chunk 0. Sur une
+    piece massive celui-ci herite des coins hauts et se dresse ensuite a
+    cote de tous les suivants (voir decisions.md D13).
+
+    `mode="tranches"` -- chunk k = demi-espace k moins demi-espace k+1 --
+    EST INVALIDE des que les plans s'inclinent : un plan incline passe sous
+    le precedent, donc les chunks se recouvrent et de la matiere serait
+    deposee deux fois. Mesure sur le bloc a canal : 56 720 mm3 pour une
+    piece de 53 340. Conserve uniquement pour documenter l'impasse ; le
+    mode "cortex" est la seule partition correcte.
+    """
     chunks = []
     for depart, direction in zip(departs, directions):
         normale = np.asarray(spherical_to_normal(*direction), dtype=float)
@@ -86,12 +101,14 @@ def decouper(maillage, directions, departs):
             )
         chunks.append(morceau)
 
-    # Chaque chunk perd ce que les chunks ulterieurs occupent deja.
+    bruts = list(chunks)
     for k in range(len(chunks)):
-        reste = chunks[k]
-        for r in range(len(chunks) - 1, k, -1):
-            if chunks[r] is not None:
-                reste = reste.difference(chunks[r], check_volume=False)
+        reste = bruts[k]
+        ulterieurs = ([bruts[k + 1]] if mode == "tranches" and k + 1 < len(bruts)
+                      else list(reversed(bruts[k + 1:])))
+        for suivant in ulterieurs:
+            if suivant is not None and not suivant.is_empty:
+                reste = reste.difference(suivant, check_volume=False)
         chunks[k] = None if reste.is_empty else nettoyer(reste)
     return chunks
 

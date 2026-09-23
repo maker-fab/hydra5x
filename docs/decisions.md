@@ -582,6 +582,60 @@ piece, le 5 axes sert-il, et de combien.
 
 ---
 
+## D14 — L'etat de l'art dit l'inverse : 2 a 3x plus solide, et le code existe
+
+Tout ce qui precede -- D11, D12, D13 -- mesure **une seule technique** : le
+multidirectionnel PLANAIRE, des chunks plats reorientes entre eux. C'est ce
+que fait Cortex, et c'est ce que ce depot a explore toute la journee.
+
+La litterature mesure autre chose.
+
+**Le tranchage courbe aligne sur les contraintes** ne suit pas la
+geometrie, il suit le champ de contraintes principales calcule par
+elements finis. Resultats publies :
+
+| | gain |
+|---|---|
+| Reinforced FDM, SIGGRAPH Asia 2020 | **+176 %** de force a la rupture en traction, +27 % en compression |
+| S³-Slicer, SIGGRAPH Asia 2022 | jusqu'a **203 %** de charge contre du planaire a direction optimisee |
+
+Soit **2 a 3 fois plus solide**. Contre les 0 % a -1,2 % mesures en D12.
+
+**D12 n'est pas faux, il est hors sujet.** Il mesure des couches planes
+perpendiculaires a l'axe du tube -- normal qu'elles n'apportent rien. Les
+couches courbes, elles, suivent reellement l'effort. La conclusion « la
+tenue mecanique ne justifie pas le 5 axes » ne vaut que pour le
+multidirectionnel planaire.
+
+**Le code est disponible et sous licence compatible** :
+
+| depot | etoiles | derniere maj | licence |
+|---|---|---|---|
+| `zhangty019/S3_DeformFDM` | 175 | 2025-04-24 | BSD-3-Clause |
+| `RyanTaoLiu/NeuralSlicer` | 101 | 2024-10-15 | **GPL-3.0** |
+
+**Ce que ca invalide dans ce depot** : D5 a ecarte le non-planaire continu
+au motif qu'il « n'a que du code d'article ». Cette premisse est fausse.
+Deux implementations maintenues existent, dont une en GPL-3.0, donc
+directement combinable avec ce projet.
+
+**Ce que ca revalorise** : `tools/fea_bending.py`, ecrit pour demolir
+l'argument mecanique, calcule precisement le champ de contraintes dont ces
+methodes ont besoin en entree. La premiere moitie du chemin est deja la,
+construite sans le savoir.
+
+**Reserve** : ce sont des codes de recherche. Disponible n'est pas
+utilisable, et les chiffres publies sont ceux de leurs auteurs. A evaluer,
+pas a croire -- c'est exactement l'erreur commise en D12, ou l'argument
+mecanique a ete affirme deux fois avant d'etre calcule.
+
+**Ce qui a fait trouver ca** : une remarque de l'utilisateur -- « si tu
+restes bloque dans cette approche, tu risques de passer a cote ». Une
+journee entiere passee a mesurer une technique sans verifier qu'elle etait
+la bonne.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
