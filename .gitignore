@@ -1,9 +1,11 @@
 # --- Environnements Python ---
 # Deux venv separes et non fusionnables : cadquery exige numpy>=2,
 # trimesh 4.3.1 exige numpy<2. Voir docs/install.md.
-.venv/
-.venv-dxf/
-venv/
+# Motif large : tout venv, quel que soit son suffixe. Un venv cree en
+# tache de fond a deja ete balaye par un `git add -A` avant que le nom
+# exact ne soit liste ici.
+.venv*/
+venv*/
 __pycache__/
 *.py[cod]
 
@@ -41,4 +43,3 @@ Thumbs.db
 # Chunks et comparaisons : regeneres par tools/export_chunks.py
 results/chunks/
 results/comparaison/
-.venv-s4/
