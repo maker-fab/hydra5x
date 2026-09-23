@@ -167,9 +167,18 @@ a un domaine, et ce dépôt fournit le test qui dit si une pièce y entre.
 
 Ce que le multidirectionnel rapporte sur ce coude, mesuré : **17 % de
 matière** contre une impression 3 axes supportée, à l'optimum de 6 chunks.
-Pas de quoi justifier deux axes à lui seul — l'argument est ailleurs, dans
-les supports qu'on ne peut pas retirer et dans l'orientation des couches.
-Détail dans [`docs/decisions.md`](docs/decisions.md) D9 et D11.
+
+Et la tenue mécanique ne compense pas. Un calcul éléments finis, avec le
+solveur validé contre Euler-Bernoulli, donne **0 % sur la pièce entière et
+−1,2 % dans le virage** : les couches ne suivent pas la courbe, elles
+s'empilent perpendiculairement à l'axe du tube, et la flexion tire droit à
+travers les interfaces. En 3 axes elles sont parallèles à l'axe dans la
+partie couchée, donc mieux placées.
+
+**Il ne reste que le support irretirable** — canaux internes, cavités
+fermées, où le gain n'est pas de 17 % mais binaire. Argument réel, mais
+étroit. Détail et chiffres dans [`docs/decisions.md`](docs/decisions.md)
+D9, D11 et D12.
 
 **Ce qui reste hors d'atteinte** : le non-planaire continu (pas d'outil
 utilisable), et les pièces larges et plates avec matière au contact du
