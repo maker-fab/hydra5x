@@ -254,6 +254,13 @@ def main():
                          args.couche, premier_chunk=(k == 0))
             corps = corps_utile(g)
             sortie += bloc_rotation(k, a, b, va, vb, z_max(sortie))
+            # NE PAS nommer cette variable `b` : elle ecraserait la liste
+            # des angles B utilisee par le chunk suivant.
+            bornes = pose.bounds
+            cx = (bornes[0][0] + bornes[1][0]) / 2.0
+            cy = (bornes[0][1] + bornes[1][1]) / 2.0
+            sortie.append(f"; HYDRA5X_REPERE chunk={k} cx={cx:.4f} cy={cy:.4f}"
+                          " ; centre XY du maillage, pour le test de collision")
             sortie.append(f"; ---- chunk {k} : {len(corps)} lignes ----")
             if k > 0:
                 sortie += approche(corps, HAUTEUR_REPRISE)

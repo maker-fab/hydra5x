@@ -70,13 +70,26 @@ def decouper(maillage, directions, departs):
     return chunks
 
 
+def transform_a_plat(morceau, normale):
+    """Matrice qui pose le chunk comme il sera imprime.
+
+    Rendue separement de `poser_a_plat` parce que le test de collision doit
+    appliquer la MEME transformation aux chunks precedents : c'est ce qui
+    les remet en position relative correcte dans le repere du chunk courant.
+    """
+    rot = trimesh.geometry.align_vectors(normale, [0, 0, 1])
+    sonde = morceau.copy()
+    sonde.apply_transform(rot)
+    centre = sonde.bounds.mean(axis=0)
+    dep = trimesh.transformations.translation_matrix(
+        (-centre[0], -centre[1], -sonde.bounds[0][2]))
+    return dep @ rot
+
+
 def poser_a_plat(morceau, normale):
     """Oriente le chunk comme il sera imprime : plan de coupe sur le plateau."""
     pose = morceau.copy()
-    pose.apply_transform(trimesh.geometry.align_vectors(normale, [0, 0, 1]))
-    pose.apply_translation((0.0, 0.0, -pose.bounds[0][2]))
-    centre = pose.bounds.mean(axis=0)
-    pose.apply_translation((-centre[0], -centre[1], 0.0))
+    pose.apply_transform(transform_a_plat(morceau, normale))
     return pose
 
 

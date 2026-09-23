@@ -280,6 +280,61 @@ reste entierement a la charge de ce projet.
 
 ---
 
+## D9 — Test de collision buse-piece
+
+**Pourquoi** : c'est le seul trou fonctionnel sans solution sur etagere.
+Cortex ne teste que la garde plateau-buse ; aucun slicer 3 axes ne peut
+aider, puisqu'il ignore que le plateau s'incline.
+
+**Ce qui rend le probleme tractable** : pendant l'impression d'un chunk le
+plateau ne bouge pas. Dans le repere de ce chunk, tout ce qui est deja
+imprime est un solide fixe -- le test redevient statique et purement
+geometrique.
+
+**Modele de buse** : une hauteur de garde requise en fonction de la
+distance horizontale, `h(r) = r / tan(alpha)`. La matiere a distance `r`
+doit rester sous `z_pointe + h(r)`. La garde de 12 mm codee en dur dans
+Cortex devient une consequence du modele au lieu d'une constante magique.
+`alpha` et le rayon utile ne sont pas independants : un alpha proche de
+90 deg avec un grand rayon decrit un disque plat a hauteur de pointe,
+physiquement absurde.
+
+**Deux etages** : une carte de hauteurs depiste vite sur tous les points,
+puis un lancer de rayons sur le maillage reel confirme le pire point.
+La carte approxime -- sa dilatation d'une cellule deplace une valeur haute
+et fausse la distance rapportee ; le lancer de rayons n'approxime rien.
+
+**Resultat sur la piece en Y a 30 deg** : les deux bras entrent en
+collision. Chunk 1, buse a Z=0,20 mm avec de la matiere haute de 5,11 mm
+a 1,50 mm de distance -- penetration confirmee **3,41 mm**. Chunk 2, buse
+a Z=1,40 mm, matiere a 5,66 mm a 0,25 mm -- penetration **4,01 mm**.
+
+**Ce que ca veut dire** : la piece de reference de ce projet n'est pas
+imprimable telle quelle. Le tronc, une fois le bras redresse a la
+verticale, se dresse immediatement a cote de la base du bras. Cortex ne
+l'a jamais signale parce qu'il ne teste pas ce cas.
+
+**Trois faux negatifs rencontres en construisant l'outil**, tous du meme
+type -- un verdict rassurant obtenu en ne testant rien :
+
+1. **Reperes disjoints.** Le slicer externe centre la piece sur son
+   plateau (X100 Y100), les maillages sont centres sur l'origine. Le test
+   comparait deux regions sans recouvrement et ne trouvait jamais rien.
+2. **Marqueur de chunk absent.** Le format de Cortex (`;Chunk 0`) n'etait
+   pas reconnu : le fichier n'etait pas analyse du tout. L'outil leve
+   desormais une erreur si aucun chunk n'est trouve.
+3. **Recalage pollue.** Les deplacements de degagement (parking a Y-175)
+   entraient dans l'emprise et decalaient le centre de 8 mm. Le recalage
+   ne se calcule plus que sur les points d'extrusion, toujours sur la
+   piece.
+
+**Le repere est desormais publie, pas devine** : `stitch_chunks.py` ecrit
+`; HYDRA5X_REPERE chunk=N cx=.. cy=..`. En son absence l'outil previent
+que son recalage est une deduction invarifiable et que son verdict
+n'engage a rien.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
