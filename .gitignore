@@ -41,3 +41,4 @@ Thumbs.db
 # Chunks et comparaisons : regeneres par tools/export_chunks.py
 results/chunks/
 results/comparaison/
+.venv-s4/
