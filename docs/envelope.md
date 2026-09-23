@@ -231,6 +231,32 @@ Les valeurs de `d` sont estimées. Le bloc Volcano 20×20×11,5 mm est
 confirmé. Le tableau de sensibilité de l'outil vaut mieux que les valeurs
 absolues — à relever au pied à coulisse.
 
+### Mesure réelle : CHC Pro, depuis sa CAO
+
+`tools/mesurer_tete.py` sur `docs/cao/chc_pro_hotend.stp`. Profil de
+silhouette `h(r)` = hauteur minimale de matière à la distance `r` de l'axe,
+puis `θ_max = min_r arctan(h(r)/r)`.
+
+| rayon | hauteur | angle | quoi |
+|---|---|---|---|
+| ≤ 1,25 mm | 0 | — | méplat de pointe, c'est le pivot |
+| **1,50 mm** | 0,62 mm | **22,3°** | **cône de la buse** |
+| 2,25–4,25 mm | 2,00 mm | 26–38° | épaulement |
+| **6,00 mm** | 2,60 mm | **23,4°** | **face basse du bloc** |
+| 8,25 mm | 4,24 mm | 27,9° | bord du bloc, Ø16,5 |
+| ≥ 8,50 mm | 20,8 mm | 67° | au-dessus, sans effet |
+
+**22,3° bruts, 17,8° utiles** — contre 17,7° / 14,2° estimés pour le
+Volcano. Le CHC Pro gagne 26 %, mesuré et non supposé.
+
+**Le résultat qui compte** : le cône de la buse et la face basse du bloc
+bornent **à égalité**, 22,3° contre 23,4°. Corriger un seul ne rapporte
+rien — chanfreiner le bloc plafonne à 22,3°, allonger la buse plafonne à
+23,4°. Il faut les deux.
+
+`encombrement_tete.py`, qui réduit chaque pièce à un point et garde le
+pire, aurait manqué cette égalité. Seul le profil la montre.
+
 ### Longueur de buse et forme du bloc
 
 `d = w · tan(θ)`. La question se pose naturellement sur `d`, mais **le

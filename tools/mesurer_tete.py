@@ -90,9 +90,14 @@ def profil_silhouette(points, pointe, r_max=25.0, pas=0.25):
     return rayons, h
 
 
-def limite(rayons, h):
-    """Inclinaison max et rayon ou elle se joue."""
-    valide = np.isfinite(h) & (rayons > 0)
+def limite(rayons, h, r_min=1.0):
+    """Inclinaison max et rayon ou elle se joue.
+
+    `r_min` exclut le meplat de la pointe. Une buse a une face plate de
+    l'ordre du millimetre : c'est le PIVOT, pas un obstacle. L'inclure fait
+    sortir 0° puisque h y vaut zero par construction.
+    """
+    valide = np.isfinite(h) & (rayons >= r_min)
     angles = np.degrees(np.arctan2(np.maximum(h[valide], 0.0), rayons[valide]))
     i = int(angles.argmin())
     return float(angles[i]), float(rayons[valide][i]), float(h[valide][i])
@@ -103,6 +108,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("step", type=Path, nargs="+")
     ap.add_argument("--r-max", type=float, default=25.0)
+    ap.add_argument("--r-min", type=float, default=1.4,
+                    help="rayon du meplat de pointe, exclu du calcul")
     ap.add_argument("--marge", type=float, default=0.80)
     ap.add_argument("--tolerance", type=float, default=0.3,
                     help="finesse de tesselation, mm")
@@ -117,7 +124,7 @@ def main():
               f"Z{pointe[2]:.2f}")
 
         rayons, h = profil_silhouette(pts, pointe, args.r_max)
-        angle, r, hauteur = limite(rayons, h)
+        angle, r, hauteur = limite(rayons, h, args.r_min)
         print(f"\n  limite brute  {angle:5.1f}°  "
               f"(matiere a r={r:.2f} mm, h={hauteur:.2f} mm)")
         print(f"  limite utile  {angle*args.marge:5.1f}°  "
@@ -125,7 +132,7 @@ def main():
 
         print("\n  profil de silhouette :")
         print(f"  {'r (mm)':>8s} {'h (mm)':>8s} {'angle':>8s}")
-        for r_ in (1, 2, 3, 5, 8, 12, 16, 20):
+        for r_ in (1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20):
             i = int(np.argmin(np.abs(rayons - r_)))
             if not np.isfinite(h[i]):
                 continue
