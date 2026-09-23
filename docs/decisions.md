@@ -212,6 +212,43 @@ extrusion. Le correctif fait retomber la mesure sur les chiffres que les
 deux slicers annoncent eux-memes : 1 328,0 contre 1 328,02 annonce par
 Prusa, 1 002,9 contre un dernier E a 1 002,89 chez Cortex.
 
+**Chaine complete, piece en Y entiere** (`tools/stitch_chunks.py`) :
+
+| | Cortex | chunks Prusa cousus | ecart |
+|---|---|---|---|
+| couches | 173 | 144 | -17 % |
+| filament | 1 166 mm | 1 577 mm | +35 % |
+| trajet extrude | 35 076 mm | 46 440 mm | +32 % |
+| trajet a vide | 18 352 mm | 7 715 mm | **-58 %** |
+| retractions | 3 542 | 622 | **-82 %** |
+| lignes de G-code | 100 499 | 37 728 | -63 % |
+
+20,5 retractions par couche contre 4,3. Matiere deposee : 43 % du volume
+plein contre 59 % -- la sous-extrusion de Cortex se confirme a l'echelle
+de la piece.
+
+Le contrat machine est inchange : angles et vitesses decomposees
+identiques au chiffre pres a la reference Cortex, retour a l'origine
+compris.
+
+**Les quatre pieges de la couture**, dans l'ordre ou ils mordent :
+
+1. **La "premiere couche" du chunk 1 se pose sur du plastique.** Vitesse
+   reduite, surepaisseur, compensation de pied d'elephant et surchauffe
+   d'accroche deviennent des defauts. Neutralises par chunk.
+2. **Les prologues s'empilent.** Sans filtrage la machine se re-origine et
+   rechauffe a chaque frontiere.
+3. **L'axe E repart de zero** a chaque chunk : G92 E0 a chaque frontiere.
+4. **Le labourage.** Le corps du chunk descend a la hauteur de couche a la
+   position de degagement, puis traverse le plateau a 0,2 mm -- la buse
+   racle ce qui est deja imprime. Trouve en relisant la sortie, pas
+   prevu. Corrige : positionnement XY a altitude de garde, descente
+   ensuite.
+
+**Ce qui n'est pas resolu** : aucune validation physique, et la collision
+buse-piece reste non testee -- ni par Cortex, ni par Prusa qui ignore le
+plateau incline, ni par la couture.
+
 **Conclusion** : l'ecart est structurel, pas cosmetique. La delegation du
 tranchage a un slicer mature est justifiee.
 
