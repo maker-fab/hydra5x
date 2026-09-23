@@ -231,6 +231,51 @@ Les valeurs de `d` sont estimées. Le bloc Volcano 20×20×11,5 mm est
 confirmé. Le tableau de sensibilité de l'outil vaut mieux que les valeurs
 absolues — à relever au pied à coulisse.
 
+### Longueur de buse et forme du bloc
+
+`d = w · tan(θ)`. La question se pose naturellement sur `d`, mais **le
+paramètre sensible est `w`**.
+
+Et `w` n'est pas la demi-largeur : c'est la **demi-diagonale**, car un bloc
+rectangulaire a une direction défavorable, et sur une tête qui tourne
+autour de C cette direction finit toujours par se présenter.
+
+À protrusion standard de 4,5 mm :
+
+| bloc | w pire | limite | directionnel ? |
+|---|---|---|---|
+| Dragon / V6 23×16 | 11,5 mm | 21,4° | oui, axe long |
+| Volcano 20×20 | **14,1 mm** | **17,7°** | oui, diagonale |
+| cylindrique Ø14 | 7,0 mm | 32,7° | **non** |
+| cylindrique Ø12 | 6,0 mm | **36,9°** | **non** |
+| cylindrique Ø10 | 5,0 mm | 42,0° | **non** |
+
+Un bloc cylindrique Ø12 double la limite **sans toucher à la buse**.
+
+Protrusion nécessaire, sur ce bloc cylindrique Ø12 :
+
+| cible utile | protrusion |
+|---|---|
+| 26° (budget partagé avec la table) | 3,8 mm — le standard suffit |
+| 36° | **6,0 mm** — +1,5 mm, thermiquement négligeable |
+| 45° (tête seule) | 9,0 mm — commence à poser problème |
+
+**Réponse : 6 mm.** Le gain est maximal pour un coût thermique encore nul.
+Au-delà, la protrusion n'est pas chauffée — la zone de fusion est dans le
+bloc — et la pointe dérive en température.
+
+**Ordre des travaux** : le bloc cylindrique d'abord, la buse ensuite.
+Allonger la buse sur un bloc carré, c'est payer en thermique ce qu'on
+obtient gratuitement en changeant la forme.
+
+Le Rapido valide la faisabilité : chauffe cylindrique, bloc plus léger,
+*« its cylindrical form allows even heating of the melting zone »*. La
+symétrie de révolution chauffe mieux, elle ne coûte rien.
+
+**Correction** : une première version de cette page prenait w = 10 mm pour
+le Volcano, sa demi-largeur. C'est la demi-diagonale qui compte, 14,1 mm,
+soit 17,7° et non 24,2°.
+
 ### Refroidissement annulaire : pas une optimisation, une nécessité
 
 | solution | w | d | limite |
