@@ -151,7 +151,8 @@ Raisonnement complet et chiffres dans [`docs/envelope.md`](docs/envelope.md).
 garde plateau-buse ; ce dépôt teste la collision avec la matière déjà
 déposée, et le verdict est sévère. La pièce de démonstration tient
 largement dans les 45° et reste impossible à imprimer : le tronc se dresse
-à 0,75 mm de la base du bras, sur 2,42 mm de haut. Un balayage de trente
+à 0,75 mm de la base du bras, sur 3,3 mm de haut — 2,35 mm de pénétration
+confirmée au lancer de rayons. Un balayage de trente
 découpes — inclinaison × hauteur de coupe — n'en trouve **aucune** qui
 passe. Aucune géométrie de buse n'y change rien, la matière fautive étant
 à moins d'un millimètre de la pointe.
@@ -160,9 +161,15 @@ passe. Aucune géométrie de buse n'y change rien, la matière fautive étant
 python3 tools/check_collision.py results/gcode/y_cousu.gcode
 ```
 
-Ce n'est pas une limite de la machine mais de la **découpe par
-demi-espaces**, la seule que Cortex implémente. Détail dans
-[`docs/decisions.md`](docs/decisions.md) D9.
+Ce n'est pas une limite de la machine : un **coude à 90°**, lui, passe le
+test — zéro contact confirmé sur tous ses chunks réorientés. La machine
+a un domaine, et ce dépôt fournit le test qui dit si une pièce y entre.
+
+Ce que le multidirectionnel rapporte sur ce coude, mesuré : **17 % de
+matière** contre une impression 3 axes supportée, à l'optimum de 6 chunks.
+Pas de quoi justifier deux axes à lui seul — l'argument est ailleurs, dans
+les supports qu'on ne peut pas retirer et dans l'orientation des couches.
+Détail dans [`docs/decisions.md`](docs/decisions.md) D9 et D11.
 
 **Ce qui reste hors d'atteinte** : le non-planaire continu (pas d'outil
 utilisable), et les pièces larges et plates avec matière au contact du

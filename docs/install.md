@@ -174,9 +174,22 @@ une panne — il démontre que la pièce de démonstration n'est pas imprimable
 telle qu'elle est découpée, et que l'outil le détecte.
 
 ```
-chunk 1 : penetration max 4.632 mm   [COLLISION]
-chunk 2 : penetration max 4.333 mm   [COLLISION]
+chunk 1 : penetration max 3.221 mm   [COLLISION]
+chunk 2 : penetration max 3.232 mm   [COLLISION]
 ```
+
+Confirmé au lancer de rayons : **2,35 mm** et **2,31 mm** de pénétration
+réelle — un muret de 3,3 mm à 0,75 mm de la buse.
+
+Pour voir le cas qui **passe**, prendre une pièce de la bonne famille :
+
+```bash
+python3 tools/parts.py
+```
+
+Le coude à 90° se décompose en chunks dont aucun n'entre en collision —
+zéro contact confirmé. Comparaison des deux familles dans
+[`decisions.md`](decisions.md) D11.
 
 Un dépistage par carte de hauteurs parcourt tous les points du trajet, puis
 un lancer de rayons sur le maillage réel confirme le pire. Raisonnement,
