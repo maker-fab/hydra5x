@@ -10,9 +10,11 @@ On n'invente que ce qui n'existe nulle part.
 **Statuts** : `à évaluer` · `retenu` · `écarté` avec la raison · `bloqué`
 avec ce qui manque.
 
-**Critère transverse** : un composant fermé se disqualifie tout seul dès
-qu'il porte un paramètre qu'on doit régler. Ce n'est pas une position sur
-le logiciel libre, c'est une contrainte d'ingénierie — voir la ligne Revo.
+**Critère transverse** : un composant fermé prive d'un levier de réglage.
+C'est une contrainte d'ingénierie, pas une position sur le libre — mais ce
+n'est un problème que si le levier est nécessaire. **Mesurer d'abord,
+écarter ensuite.** La ligne Revo a été corrigée pour cette raison : elle
+disait « écarté » avant toute mesure.
 
 ---
 
@@ -31,7 +33,7 @@ le logiciel libre, c'est une contrainte d'ingénierie — voir la ligne Revo.
 | Emprunt | Source | Résout | Statut |
 |---|---|---|---|
 | Chauffage annulaire céramique | Phaetus Rapido | supprime la cartouche Ø6 posée à côté du canal, qui interdisait de descendre sous ~Ø16 | **retenu en principe** — cotes à relever |
-| E3D Revo | — | changement de buse à froid en moins d'une minute | **écarté** — même encombrement qu'un V6, donc aucun gain ; et surtout **système fermé et breveté**, buses propriétaires à 27 €. On ne peut plus modifier la protrusion de buse, qui est un levier de conception (`encombrement_tete.py`). Un système fermé supprime le paramètre qu'on doit régler. |
+| E3D Revo | — | changement de buse à froid en moins d'une minute | **à mesurer** — écarté trop vite sur un principe. Le système est fermé, donc la protrusion n'est pas réglable ; mais si le profil de série est déjà bon, le levier est inutile. `mesurer_tete.py` tranchera. La variante **Voron** est la plus élancée du catalogue, à prendre en premier. |
 | Bloc cylindrique | Rapido | supprime la direction défavorable ; sur une tête qui tourne, un bloc carré présente tôt ou tard sa diagonale | **retenu en principe** |
 | Refroidissement annulaire | conduits intégrés haut débit | 51,8° au lieu de 23,2°, **et** supprime la dépendance à la direction | **retenu en principe** |
 | Chaussette silicone | — | à retirer ou redessiner : 18,4°, elle borne la machine pour quelques euros | à évaluer |
