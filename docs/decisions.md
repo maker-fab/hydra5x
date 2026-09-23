@@ -801,6 +801,60 @@ par un champ continu, et la recouture par une deformation inverse.
 
 ---
 
+## D18 — La configuration mixte existe, marche, et est documentee
+
+En cherchant d'ou venait le `MIN_ROTATION = -130°` de S4 Slicer, on tombe
+sur la machine de son auteur :
+[Core-R-Theta-4-Axis-Printer](https://github.com/jyjblrd/Core-R-Theta-4-Axis-Printer),
+915 etoiles, maj juin 2025, avec CAO STEP complete, PCB du plateau en
+KiCad, et config RepRapFirmware.
+
+**Limites d'axes reelles**, relevees dans `to4axis.g` :
+
+```
+M208 C-20000000 X-37.5 Z-50 B-180 S1    ; minima
+M208 C 20000000 X115.5 Z200  B  90 S0   ; maxima
+```
+
+| axe | course | ou |
+|---|---|---|
+| C | **continu**, sans butee | plateau |
+| X | -37,5 a 115,5 mm, passe le centre | tete, radial |
+| Z | -50 a 200 mm | tete |
+| **B** | **-180° a +90°, soit 270°** | **la buse** |
+
+Le README le dit : « leverages the printer's **rotating nozzle** ». C'est
+la **quatrieme configuration canonique**, mixte tete-table -- une rotation
+sur le plateau, une sur la tete.
+
+**Ce que ce point de compromis apporte** :
+
+| | plateau bascule ? | buse s'incline ? | depot aligne sur la gravite ? |
+|---|---|---|---|
+| TRT | oui | non | **oui, a tout angle** |
+| tete-tete | non | oui | non |
+| **mixte** | **non** | **oui** | non |
+
+La mixte prend l'avantage du TRT -- la piece ne bascule jamais, donc ni
+decollement ni balancement, donc pas le mode de collision mesure en D9 et
+D13 -- **et** celui du tete-tete, la buse entre en biais. Elle paie le
+desalignement gravitaire au depot, le point souleve en D16.
+
+**Et elle repond a la question des 90°** : un B de -180° a +90° ne coute
+rien quand c'est la buse qui tourne. La contrainte de bridage identifiee
+en D16 ne s'applique qu'aux configurations ou la PIECE se retourne.
+
+**Ce que ca change pour D2, rouverte en D15** : le choix n'etait pas binaire
+TRT/HH. Il y a un troisieme point, realise, documente, avec sa CAO et son
+firmware publics, et un slicer non-planaire ecrit pour lui.
+
+**Reserve** : c'est une machine 4 axes, pas 5 -- pas de second axe de
+rotation de la tete. Son enveloppe d'orientations est donc plus etroite
+qu'une 5 axes complete, ce qui suffit pour du non-planaire de revolution
+mais pas pour toute orientation.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,

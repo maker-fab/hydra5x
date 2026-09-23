@@ -65,8 +65,13 @@ def extraire_cellules(notebook, debut=2, fin=12):
     nb = json.loads(Path(notebook).read_text())
     bouts = []
     for i, c in enumerate(nb["cells"]):
-        if c["cell_type"] == "code" and debut <= i <= fin:
-            bouts.append(f"# ===== cellule {i} =====\n" + "".join(c["source"]))
+        if c["cell_type"] != "code" or not (debut <= i <= fin):
+            continue
+        # les magies Jupyter (%matplotlib) et les commandes shell (!pip)
+        # sont des erreurs de syntaxe en Python pur
+        lignes = [l for l in "".join(c["source"]).split("\n")
+                  if not l.lstrip().startswith(("%", "!"))]
+        bouts.append(f"# ===== cellule {i} =====\n" + "\n".join(lignes))
     return "\n\n".join(bouts)
 
 

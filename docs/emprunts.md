@@ -55,6 +55,7 @@ confirmer ce que `B` incline sur sa machine, plateau ou tête.
 |---|---|---|---|
 | Base TRT complète | [Fractal 5 Pro](https://github.com/fractalrobotics/Fractal-5-Pro), GPL-3.0 | CAO + BOM + Klipper, la seule pile complète | **retenu** — mais D2 rouverte |
 | Configurations HH | Rep5x, Open5x | la pièce ne bascule pas ; adhérence et enveloppe préservées | à évaluer — voir D15 |
+| **Configuration mixte 4 axes** | **[Core R-Theta](https://github.com/jyjblrd/Core-R-Theta-4-Axis-Printer)**, 915 ★, CAO STEP + PCB KiCad + config RepRapFirmware | plateau qui tourne sans basculer, **buse inclinable sur 270°** (B de −180° à +90°). Supprime le balancement de la pièce ET donne l'accès en biais | **à évaluer sérieusement** — voir D18 |
 | Tête inclinable bridée | ce projet, piste v2 | soulage la garde plateau-buse | **retenu en principe** |
 | Embase sacrificielle 9 mm | ce projet | supprime la contrainte des premiers millimètres | **retenu** |
 
