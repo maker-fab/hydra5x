@@ -752,6 +752,55 @@ et si le seul argument binaire du projet est dans le perimetre ou non.
 
 ---
 
+## D17 — Le multidirectionnel est l'approximation discrete du non-planaire
+
+En ouvrant le notebook de S4 Slicer, son architecture apparait -- et c'est
+celle que ce projet a reinventee cet apres-midi sans le savoir.
+
+**Ce que fait S4** :
+
+1. maillage tetraedrique, champ de rotation pilote par les surplombs
+2. **deformation du modele** pour rendre les surplombs imprimables a plat
+3. export du STL deforme
+4. « **Now, go and slice the stl file in Cura!** » -- un slicer 3 axes
+   ordinaire fait perimetres, remplissage et supports
+5. le G-code est relu, la **deformation inverse** lui est appliquee : les
+   couches planes deviennent courbes et les axes rotatifs apparaissent
+
+**S4 ne tranche pas.** Il deforme, delegue, puis de-deforme. C'est
+exactement le principe de `stitch_chunks.py` -- delegation a PrusaSlicer,
+recouture -- trouve independamment le meme jour (D8, D11).
+
+**Et la relation entre les deux approches est une relation d'ordre** :
+
+| | champ de rotation |
+|---|---|
+| multidirectionnel (Cortex, ce depot) | **constant par morceaux** -- un angle par chunk |
+| non-planaire (S4, S³) | **continu** -- un angle par point |
+
+Le multidirectionnel n'est pas une technique concurrente du non-planaire :
+c'en est la discretisation la plus grossiere possible. Ce qui explique
+retrospectivement tous les resultats de la journee :
+
+- D12, tenue mecanique nulle : des couches planes perpendiculaires a l'axe
+  du tube ne suivent rien. Un champ continu suit la courbe.
+- D9 et D13, collisions : les sauts d'angle entre chunks creent les murs
+  qui percutent. Un champ continu n'a pas de saut.
+- D11, 17 % de matiere seulement : chaque coupe coute des parois et des
+  faces pleines. Un champ continu n'a pas de coupe.
+
+**Les trois limites mesurees sont des artefacts de la discretisation**, pas
+des proprietes du 5 axes. C'est la conclusion que D14 annoncait sans la
+demontrer ; l'architecture de S4 la rend evidente.
+
+**Consequence pour le projet** : la chaine construite aujourd'hui --
+decoupe, delegation, couture, detection de collision, mesure -- reste
+valide. Elle opere juste au mauvais point du spectre. Passer au continu ne
+demande pas de la jeter mais de remplacer le champ constant par morceaux
+par un champ continu, et la recouture par une deformation inverse.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
