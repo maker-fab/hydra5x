@@ -26,7 +26,7 @@ mieux, ce sera un bonus.
 
 ---
 
-## D2 — Cinématique TRT, base Fractal 5 Pro
+## D2 — Cinématique TRT, base Fractal 5 Pro  ⟨ROUVERTE, voir D15⟩
 
 Plateau assurant rotation (A) et basculement (B), tête fixe en XYZ.
 
@@ -633,6 +633,60 @@ mecanique a ete affirme deux fois avant d'etre calcule.
 restes bloque dans cette approche, tu risques de passer a cote ». Une
 journee entiere passee a mesurer une technique sans verifier qu'elle etait
 la bonne.
+
+---
+
+## D15 — D2 rouverte : la collision dépend de la configuration cinématique
+
+Les quatre configurations canoniques de la 5 axes :
+
+| | rotations | la pièce bouge ? |
+|---|---|---|
+| tête-tête (HH) | A+C ou B+C dans la broche | **non** |
+| table-table (TRT) | C sur le plateau, A sur le berceau | **oui, elle bascule** |
+| mixte tête-table | une de chaque | partiellement |
+
+**Tout ce que ce dépôt a mesuré en collision — D9, D13 — porte sur le
+TRT.** En TRT la pièce bascule : le déjà-imprimé pivote et vient se dresser
+à côté de la buse. C'est le mode de défaillance mesuré sur le Y (2,35 mm
+confirmés) et sur le bloc à canal (25 à 27 mm).
+
+**En tête-tête, ce mode n'existe pas.** La pièce ne bouge jamais, le
+déjà-imprimé reste où il est. La collision devient « corps de buse incliné
+contre pièce » : locale, bornée par l'encombrement du bloc chauffant, et
+c'est le problème classique de la CNC 5 axes — traité depuis des décennies.
+
+**Le lien avec D14** : le tranchage courbe, celui qui donne 2 à 3× la
+résistance, exige que l'axe de la buse varie par rapport à la surface. Le
+tête-tête le fait nativement. Le TRT ne peut le faire qu'en tournant la
+pièce entière, ce qui *cause* le balancement.
+
+**Ce qui rend la réouverture légitime** : D2 a été tranché sur la dynamique
+(tête légère, hotend standard, pas de filament dans une articulation) et
+sur la disponibilité d'une pile complète chez Fractal. **La collision
+n'était pas mesurée à l'époque.** Elle l'est maintenant et elle pointe dans
+l'autre sens. D2 contenait déjà l'avertissement -- « sur une machine
+tête-tête le raisonnement serait inverse » -- jamais appliqué aux mesures.
+
+**Ironie du dépôt** : la cinématique extraite, corrigée et validée en
+`kinematics/` -- `rep5x_ik.cpp`, `PENTA_AXIS_HH` -- **est du tête-tête**.
+Le projet a validé HH puis retenu TRT pour le matériel.
+
+**Ce qui n'est pas dit** : que TRT soit un mauvais choix. Ses raisons
+tiennent. Le tête-tête paie en masse mobile, en filament traversant un
+joint, et l'encombrement du bloc chauffant y limite l'inclinaison
+utilisable. Aucune des deux n'a été chiffrée sur ce critère.
+
+**Ce qu'il faut mesurer pour trancher** :
+
+1. Rejouer `check_collision.py` en configuration HH -- pièce fixe, buse
+   inclinée. Le test existe, seul le repère change.
+2. Chiffrer l'inclinaison maximale d'un tête-tête réel, limitée par
+   l'encombrement du hotend, comme la garde de 12 mm l'a été pour le TRT.
+3. Comparer les deux sur la même pièce et le même critère.
+
+Tant que ce n'est pas fait, D2 reste ouverte et le choix TRT n'est pas
+justifié par la mesure -- seulement par la disponibilité.
 
 ---
 
