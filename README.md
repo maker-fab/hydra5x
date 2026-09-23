@@ -1,4 +1,4 @@
-<img src="docs/logo/hydra5x.svg" alt="" width="96" align="right">
+<img src="docs/brand/icon-256.png" alt="" width="132" align="right">
 
 # HYDRA5X
 
