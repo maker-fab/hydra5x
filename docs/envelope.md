@@ -141,6 +141,50 @@ tient largement. Relation utile :
 
 > Doubler la largeur d'embase divise la contrainte au bord par 4.
 
+## Bases géométriques : table et tête se partagent l'inclinaison
+
+Le dépôt raisonnait en « table **ou** tête ». C'est un faux choix. Les deux
+contraintes sont de **nature différente**, donc indépendantes, et
+l'inclinaison demandée se répartit :
+
+```
+θ_table + θ_tête  ≥  θ_demandé
+
+  θ_table ≤ marge · arcsin( z / G )      ← dépend de z, NULLE à z = 0
+  θ_tête  ≤ marge · min( α, bridage )    ← constante
+```
+
+`z` = hauteur du point le plus bas du chunk, `G` = garde plateau-buse
+(12 mm chez Cortex), `α` = demi-angle du cône de buse. Le bridage vient du
+bloc chauffant, de la ventilation et du passage du filament — c'est la
+valeur à relever sur la CAO réelle.
+
+**Pourquoi le cumul rapporte** : la limite de la table s'effondre quand la
+pièce descend et vaut zéro au contact du plateau. Celle de la tête est
+constante. **La tête couvre exactement là où la table est impuissante.**
+
+`tools/envelope_hybride.py`. Hauteur minimale pour atteindre 45°, marge de
+sécurité 80 % sur chaque axe :
+
+| configuration | z minimal |
+|---|---|
+| table seule | **9,98 mm** |
+| table + tête à 45° | **2,34 mm** |
+| table + tête bridée à 20° | **7,10 mm** |
+
+La bande contrainte passe de 10 mm à 2,3 mm — facteur 4. Toute la valeur
+tient dans le bridage réel de la tête, qui est une question de CAO.
+
+**Ordre de répartition** : charger la **tête en priorité**. Contre-intuitif,
+mais la limite de la tête est constante alors que celle de la table se
+raréfie quand la pièce descend. Avec une tête à 36° utiles, la table n'a
+plus que 9° à fournir pour atteindre 45° — la garde plateau-buse cesse
+d'être le facteur limitant.
+
+**Réserve héritée** : tout repose sur `garde = z / sin(θ)`, modèle de
+Cortex non reconstituable depuis son code et jamais confronté à une
+distance géométrique réelle. À vérifier sur le matériel.
+
 ## Piste v2 — tête inclinable
 
 Ajouter une inclinaison de tête bornée, en gardant la TRT : machine à
