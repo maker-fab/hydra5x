@@ -333,6 +333,46 @@ type -- un verdict rassurant obtenu en ne testant rien :
 que son recalage est une deduction invarifiable et que son verdict
 n'engage a rien.
 
+### Aucune decoupe du Y ne passe
+
+`tools/sweep_decomposition.py` balaie inclinaison des bras et hauteur du
+plan de coupe, en echantillonnant les sections au lieu de trancher.
+
+| bras \ coupe | 26 | 28 | 29 | 30 | 31 | 32 |
+|---|---|---|---|---|---|---|
+| 10° | 5,17 | 3,22 | **2,23** | n/a | n/a | n/a |
+| 20° | 5,61 | 3,58 | 3,89 | n/a | n/a | n/a |
+| 25° | 5,53 | 5,37 | 4,46 | n/a | n/a | n/a |
+| 30° | 5,86 | 5,53 | 5,00 | 4,13 | n/a | n/a |
+| 40° | 7,79 | 6,26 | 5,49 | 4,72 | 3,40 | 2,65 |
+
+Penetration max en mm ; `n/a` = decoupe degeneree. **Aucune case ne passe.**
+
+**Ce qui commande, ce n'est pas l'angle.** A hauteur fixee, passer de 10° a
+40° change la penetration de moins de 2 mm ; passer de z=20 a z=31 la fait
+tomber de 10 mm a 1 mm. Logique retrospective : ce qui percute est le
+tronc dresse a cote de la base du bras, et sa hauteur au point de jonction
+depend de l'altitude de coupe, pas de l'angle de redressement.
+
+**Aucune buse ne corrige.** A 45° comme a 80° de demi-angle, la meme
+2,23 mm : la matiere fautive est a moins d'un millimetre de la pointe, la
+ou aucun cone n'a d'effet. Le meilleur cas, confirme par lancer de rayons,
+laisse **1,47 mm** de penetration -- un muret de 2,42 mm a 0,75 mm de la
+buse. C'est une rainure etroite ou la buse ne rentre pas, pas un probleme
+de degagement conique.
+
+**Conclusion** : cette geometrie en Y, decoupee par demi-espaces, est
+structurellement incompatible avec une buse reelle. La parade n'est pas
+dans les parametres mais dans la strategie -- trancher les bras en
+plusieurs blocs, ou accepter du support sur la jonction.
+
+**Cinquieme faux negatif**, meme famille que les quatre autres : le premier
+balayage annoncait une decoupe sans collision a 25°/34 mm. Le plan de
+coupe passait **au-dessus** d'une piece haute de 32,1 mm : les chunks
+"reorientes" pesaient 0,1 mm3. Zero collision parce qu'il n'y avait plus
+de multidirectionnel. Un garde-fou rejette desormais toute decoupe dont
+les chunks reorientes font moins de 2 % du volume.
+
 ---
 
 ## Erreurs commises — pour ne pas les refaire
