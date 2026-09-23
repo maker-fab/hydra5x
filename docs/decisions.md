@@ -375,53 +375,49 @@ les chunks reorientes font moins de 2 % du volume.
 
 ---
 
-## D10 — Le critere geometrique : rien ne doit depasser le plan de base
+## D10 — Eclats booleens : toutes les mesures de collision etaient faussees
 
-En cherchant une decoupe imprimable du Y, une regle est tombee, et elle
-gouverne tout le reste.
+**Ce qui a ete trouve** : chaque chunk produit par `decouper()` traine une
+nuee de **composantes de volume nul** -- quelques facettes chacune,
+dispersees n'importe ou dans la piece. Artefacts des differences
+booleennes de manifold3d. Le chunk 0 du coude : 1 composante reelle de
+1 355,7 mm3 et **neuf eclats**, dont certains a 30 mm de distance et 43 mm
+de hauteur.
 
-**Mesure**, tronc contre premier bras, plan de coupe fixe a z=24 :
+Ils ne changent pas le volume, donc le controle de coherence volumique de
+`export_chunks.py` les laissait passer. Mais ils etendent la boite
+englobante a toute la piece, ils apparaissent dans la carte de hauteurs,
+et les rayons les touchent. **Le detecteur mesurait des artefacts.**
 
-| theta | H tronc | H.sin(theta) | penetration | pen/H |
-|---|---|---|---|---|
-| 15° | 6,65 | 1,72 | 5,75 | 0,86 |
-| 25° | 7,03 | 2,97 | 6,54 | 0,93 |
-| 35° | 9,61 | 5,51 | 9,24 | 0,96 |
-| 45° | 7,78 | 5,50 | 6,82 | 0,88 |
-| 60° | 22,33 | 19,34 | 19,79 | 0,89 |
+**Correction** : `nettoyer()` ne garde que les composantes dont le volume
+depasse 1e-6 du total.
 
-`H` = hauteur dont le tronc depasse le plan de base du chunk, apres
-reorientation. **La penetration vaut 0,9 x H sur toute la plage, et ne
-depend pas de l'angle.** L'hypothese intuitive -- une dependance en
-`H.sin(theta)`, la matiere qui "se couche" -- est fausse : le rapport y
-varie de 3,34 a 1,02 alors qu'il reste plat contre `H`.
+**Effet sur les mesures** :
 
-**Pourquoi** : le mur se dresse *a cote* de la buse, pas au-dessus. Le cone
-n'autorise que `r/tan(alpha)` de garde a distance `r`, et `r` est petit
-quand la matiere est adjacente. La penetration vaut donc la hauteur du mur,
-un point c'est tout.
+| | avant nettoyage | apres |
+|---|---|---|
+| coude 90°, 4 chunks | 24 a 31 mm | **0,53 a 0,58 mm** |
+| Y a 30° | 4,63 mm | **4,19 mm** |
 
-**Le critere qui en decoule**, verifiable sur la geometrie seule, sans
-trancher ni simuler :
+Le coude passe -- le residu est du bruit de grille, le lancer de rayons
+confirme **zero contact** sur les trois chunks. Le Y collisionne vraiment :
+sa mesure bouge a peine, D9 tient.
 
-> Apres reorientation, **rien de ce qui est deja imprime ne doit depasser
-> le plan de base du nouveau chunk** a proximite de celui-ci.
+**Ce qui est retire** : la premiere version de ce D10 annoncait une loi
+`penetration ~ 0,9 x H`, H etant la hauteur dont le deja-imprime depasse le
+plan de base. Cette hauteur etait celle de la nuee d'eclats, qui couvre
+toute la piece -- d'ou la correlation, qui ne mesurait que la taille de la
+piece. La loi est retiree. Le critere qualitatif -- apres reorientation,
+rien de deja imprime ne doit se dresser a cote du plan de base -- reste
+valide, mais il n'est plus quantifie.
 
-**Ce que ca dit des pieces** : une branche qui part du MILIEU d'une forme
-plus haute est structurellement incompatible avec la decoupe par
-demi-espaces en TRT. Y, T, X : le tronc depasse toujours le plan de base du
-bras, quel que soit l'angle, quelle que soit la hauteur de coupe, quel que
-soit le nombre de paliers. Ce n'est pas un defaut de reglage.
-
-Les geometries qui conviennent sont celles dont les chunks successifs
-montent de facon monotone -- helice, tube coude, arche imprimee depuis une
-extremite. A chaque reorientation, le deja-imprime reste sous le plan de
-base du suivant.
-
-**Consequence pour le projet** : le Y n'est pas seulement une mauvaise piece
-de demonstration parce qu'il n'a pas besoin du multidirectionnel (D9). Il
-appartient a la famille que cette cinematique ne sait pas faire. Il faut
-une piece de test de l'autre famille.
+**Septieme faux resultat de la session, et le plus couteux** : les six
+precedents etaient des faux negatifs -- un verdict rassurant obtenu sans
+rien tester. Celui-ci est un faux POSITIF massif, qui a fait conclure a
+l'impossibilite de geometries parfaitement imprimables. Le signal qui
+aurait du alerter plus tot : une penetration de 31 mm sur une piece haute
+de 48 mm, soit la buse enfoncee aux deux tiers de la piece. C'etait
+absurde et je l'ai rapporte sans le questionner.
 
 ---
 

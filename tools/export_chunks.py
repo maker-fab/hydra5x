@@ -48,6 +48,32 @@ def demi_espace(maillage, point, normale):
     return maillage.intersection(boite)
 
 
+VOLUME_ECLAT = 1e-6   # fraction du volume du chunk sous laquelle une
+                      # composante est un artefact booleen
+
+
+def nettoyer(morceau, seuil=VOLUME_ECLAT):
+    """Retire les fragments de volume nul laisses par les differences.
+
+    Les operations booleennes de manifold3d deposent des eclats de volume
+    nul -- quelques facettes, disperses n'importe ou dans la piece. Ils ne
+    changent pas le volume du chunk mais ils etendent sa boite englobante
+    a toute la piece, et surtout ils apparaissent dans toute carte de
+    hauteurs ou tout lancer de rayons. Un test de collision qui les voit
+    mesure des artefacts.
+    """
+    if morceau is None or morceau.is_empty:
+        return morceau
+    composantes = morceau.split(only_watertight=False)
+    if len(composantes) <= 1:
+        return morceau
+    total = abs(morceau.volume)
+    gardees = [c for c in composantes if abs(c.volume) > seuil * max(total, 1e-9)]
+    if not gardees:
+        return morceau
+    return trimesh.util.concatenate(gardees) if len(gardees) > 1 else gardees[0]
+
+
 def decouper(maillage, directions, departs):
     """Reproduit create_chunkList() de Cortex."""
     chunks = []
@@ -66,7 +92,7 @@ def decouper(maillage, directions, departs):
         for r in range(len(chunks) - 1, k, -1):
             if chunks[r] is not None:
                 reste = reste.difference(chunks[r], check_volume=False)
-        chunks[k] = None if reste.is_empty else reste
+        chunks[k] = None if reste.is_empty else nettoyer(reste)
     return chunks
 
 
