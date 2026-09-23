@@ -175,10 +175,21 @@ s'empilent perpendiculairement à l'axe du tube, et la flexion tire droit à
 travers les interfaces. En 3 axes elles sont parallèles à l'axe dans la
 partie couchée, donc mieux placées.
 
-**Il ne reste que le support irretirable** — canaux internes, cavités
-fermées, où le gain n'est pas de 17 % mais binaire. Argument réel, mais
-étroit. Détail et chiffres dans [`docs/decisions.md`](docs/decisions.md)
-D9, D11 et D12.
+**Le support irretirable existe bel et bien** : sur un bloc percé d'un
+canal coudé, 100 % du support généré ne touche jamais le plateau — il est
+entièrement dans le canal, inextractible. La pièce n'est pas plus chère en
+3 axes, elle est irrecevable.
+
+**Mais le multidirectionnel ne la sauve pas** : 25 à 27 mm de collision.
+Le verrou n'est pas la cinématique, c'est le **modèle de découpe** — un
+demi-espace par chunk sait empiler des tranches sur une pièce élancée,
+pas tailler un volume massif en escalier. Or les pièces à canal interne
+sont précisément les massives.
+
+Les quatre arguments, mesurés : matière **17 %**, mécanique **0 %**,
+support irretirable **réel mais hors d'atteinte**, état de surface non
+mesuré. Aucun ne justifie seul deux axes de plus. Détail dans
+[`docs/decisions.md`](docs/decisions.md) D9, D11, D12 et D13.
 
 **Ce qui reste hors d'atteinte** : le non-planaire continu (pas d'outil
 utilisable), et les pièces larges et plates avec matière au contact du
