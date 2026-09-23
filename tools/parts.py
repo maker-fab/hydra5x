@@ -35,6 +35,42 @@ def coude(rayon_tube=6.0, rayon_courbure=30.0, angle_total=90.0,
     return maillage
 
 
+def bloc_a_canal(rayon_canal=5.0, rayon_courbure=25.0, angle_total=90.0,
+                 base=10.0, marge=7.0, segments=48, facettes=28):
+    """Bloc massif traverse d'un canal coude.
+
+    Le cas ou le multidirectionnel n'est pas un gain marginal mais binaire :
+    en 3 axes le toit du canal est en surplomb, le support se depose a
+    l'interieur, et il n'y a aucun moyen de l'en sortir. La piece est donc
+    irrecevable, pas juste plus chere.
+    """
+    chemin = [np.array([0.0, 0.0, z]) for z in np.linspace(-marge, base, 6)]
+    centre = np.array([rayon_courbure, 0.0, base])
+    for a in np.linspace(0.0, np.radians(angle_total), segments)[1:]:
+        chemin.append(centre + np.array([-rayon_courbure * np.cos(a), 0.0,
+                                         rayon_courbure * np.sin(a)]))
+    # prolonge la sortie pour percer franchement la paroi
+    sortie = chemin[-1] - chemin[-2]
+    chemin.append(chemin[-1] + sortie / np.linalg.norm(sortie) * marge)
+    chemin = np.array(chemin)
+
+    cercle = trimesh.path.creation.circle(radius=rayon_canal,
+                                          segments=facettes).polygons_full[0]
+    canal = trimesh.creation.sweep_polygon(cercle, chemin, cap=True)
+
+    bmin, bmax = canal.bounds
+    bmin = bmin - marge
+    bmax = bmax + marge
+    bmin[2] = 0.0                      # le bloc repose sur le plateau
+    bmax[2] = canal.bounds[1][2] + marge
+    bloc = trimesh.creation.box(extents=(bmax - bmin))
+    bloc.apply_translation((bmin + bmax) / 2.0)
+
+    piece = bloc.difference(canal)
+    piece.apply_translation((0.0, 0.0, -piece.bounds[0][2]))
+    return piece
+
+
 def axe_du_coude(rayon_courbure=30.0, angle_total=90.0, base=12.0, n=64):
     """Points et tangentes le long de l'axe, pour poser les plans de coupe."""
     centre = np.array([rayon_courbure, 0.0, base])

@@ -529,6 +529,59 @@ peut desupporter, donc la plupart.
 
 ---
 
+## D13 — Le support irretirable : reel, et hors de portee quand meme
+
+Dernier argument encore debout apres D11 et D12. Mesure sur un bloc massif
+traverse d'un canal coude a 90°, diametre 10 mm -- `parts.bloc_a_canal()`,
+51 x 24 x 47 mm, maillage etanche.
+
+**L'argument est confirme, et il est bien binaire** :
+
+| | filament |
+|---|---|
+| sans support | 7 704,58 mm |
+| support partout | 8 074,83 mm |
+| support **depuis le plateau seulement** | 7 704,58 mm |
+
+La troisieme ligne est identique a la premiere : **aucun support ne part du
+plateau**. Les 370 mm generes sont integralement a l'interieur du canal.
+En 3 axes cette piece n'est pas plus chere, elle est **irrecevable**.
+
+**Mais le multidirectionnel ne la sauve pas** : collision de 25 a 27 mm sur
+tous les chunks, confirmee au lancer de rayons.
+
+**Le mecanisme, et il n'est pas celui qu'on croit.** Le chunk 1 a la meme
+direction que le chunk 0 -- une simple coupe horizontale, sans
+reorientation -- et collisionne pourtant de 25 mm. Parce que dans le modele
+de Cortex, `chunk 0` n'est pas « le bas de la piece » : c'est **tout ce que
+les demi-espaces ulterieurs n'ont pas reclame**, coins hauts du bloc
+compris. Il domine donc tous les chunks suivants.
+
+**Ce n'est pas une limite de la cinematique TRT, c'est une limite du modele
+de decoupe** : un demi-espace par chunk, les ulterieurs cisele's dans les
+precedents. Ce modele sait produire une pile de tranches sur une piece
+elancee ; il ne sait pas decouper un volume massif en escalier.
+
+**Conclusion** : les pieces a canal interne sont precisement celles qui
+sont massives, et la masse est ce que ce modele de decoupe ne sait pas
+traiter. L'argument survit en theorie et meurt en pratique.
+
+**Bilan des quatre arguments** :
+
+| argument | verdict |
+|---|---|
+| economie de matiere | 17 %, insuffisant (D11) |
+| tenue mecanique | nulle a -1,2 % (D12) |
+| support irretirable | reel, mais la piece collisionne (D13) |
+| etat de surface | non mesure |
+
+Aucun ne justifie a lui seul 2 600 $ et deux axes supplementaires. Ce qui
+reste du projet est **l'outillage de mesure** : il repond, chiffres a
+l'appui, a une question que ni Cortex ni Fractal ne posent -- pour cette
+piece, le 5 axes sert-il, et de combien.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
