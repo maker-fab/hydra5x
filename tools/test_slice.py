@@ -134,6 +134,9 @@ def main():
 
     # 2) Le vrai test : Y, 3 directions (tronc + 2 bras a 45 deg)
     #    spherical_to_normal(theta, phi) : theta = angle depuis +Z, phi = azimut
+    # ATTENTION : cette decoupe aboutit mais n'est PAS imprimable -- la buse
+    # percute le tronc. Voir docs/decisions.md D9 et tools/check_collision.py.
+    # On la garde comme cas de reference du pipeline, pas comme exemple sain.
     # 30 deg et non 45 : a 45 la garde plateau-buse de 12 mm est violee et
     # Cortex refuse — comportement correct, mais on veut ici une demo qui
     # aboutit. Voir docs/envelope.md pour l'enveloppe mesuree.

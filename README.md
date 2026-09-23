@@ -147,10 +147,26 @@ pelage de la géométrie fine. Elle domine les alternatives matérielles
 
 Raisonnement complet et chiffres dans [`docs/envelope.md`](docs/envelope.md).
 
+**La collision buse-pièce mord avant l'angle.** Cortex ne teste que la
+garde plateau-buse ; ce dépôt teste la collision avec la matière déjà
+déposée, et le verdict est sévère. La pièce de démonstration tient
+largement dans les 45° et reste impossible à imprimer : le tronc se dresse
+à 0,75 mm de la base du bras, sur 2,42 mm de haut. Un balayage de trente
+découpes — inclinaison × hauteur de coupe — n'en trouve **aucune** qui
+passe. Aucune géométrie de buse n'y change rien, la matière fautive étant
+à moins d'un millimètre de la pointe.
+
+```bash
+python3 tools/check_collision.py results/gcode/y_cousu.gcode
+```
+
+Ce n'est pas une limite de la machine mais de la **découpe par
+demi-espaces**, la seule que Cortex implémente. Détail dans
+[`docs/decisions.md`](docs/decisions.md) D9.
+
 **Ce qui reste hors d'atteinte** : le non-planaire continu (pas d'outil
-utilisable), les pièces larges et plates avec matière au contact du plateau
-(une roue radiale ouverte plafonne à 5° d'inclinaison — mesuré), et la
-collision buse-pièce que Cortex ne teste pas.
+utilisable), et les pièces larges et plates avec matière au contact du
+plateau (une roue radiale ouverte plafonne à 5° d'inclinaison — mesuré).
 
 ---
 

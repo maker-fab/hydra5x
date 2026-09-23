@@ -19,6 +19,14 @@ La question est donc purement géométrique :
 Combinés aux 360° de l'axe A, ils donnent accès à n'importe quelle
 orientation utile.
 
+> **Cette limite angulaire n'est pas la seule, ni la plus mordante.**
+> La collision entre la buse et la matière déjà déposée est une contrainte
+> **indépendante**, qui peut interdire une découpe bien avant que l'angle
+> ne pose problème. La pièce de démonstration de ce dépôt tient largement
+> dans les 45° et reste pourtant impossible à imprimer : le tronc se dresse
+> à moins d'un millimètre de la base du bras. Voir
+> [`decisions.md`](decisions.md) D9.
+
 ## Le modèle de garde de Cortex
 
 `slicing_functions.py` et `widget_functions.py`, constante en dur :

@@ -140,6 +140,11 @@ d'environnement — vérifier les versions à l'étape 2.
 Les lignes `MANUAL_STEPPER` dans le G-code sont les réorientations entre
 chunks.
 
+**« Slicing abouti » ne veut pas dire « imprimable ».** Ce G-code est
+produit sans erreur, mais la buse y percute la pièce déjà déposée : voir
+l'étape 5. Cortex ne teste que la garde plateau-buse, jamais la collision
+avec la matière. C'est une limite du slicer, pas de l'installation.
+
 ---
 
 ## 4. Régression complète
@@ -157,7 +162,34 @@ correctifs, pas une fatalité.
 
 ---
 
-## 5. Cinématique — vérification indépendante
+## 5. Collision buse-pièce
+
+```bash
+python3 tools/stitch_chunks.py --prusa /usr/bin/prusa-slicer
+python3 tools/check_collision.py results/gcode/y_cousu.gcode
+```
+
+**Sortie attendue : 2 chunks en collision.** C'est le résultat correct, pas
+une panne — il démontre que la pièce de démonstration n'est pas imprimable
+telle qu'elle est découpée, et que l'outil le détecte.
+
+```
+chunk 1 : penetration max 4.632 mm   [COLLISION]
+chunk 2 : penetration max 4.333 mm   [COLLISION]
+```
+
+Un dépistage par carte de hauteurs parcourt tous les points du trajet, puis
+un lancer de rayons sur le maillage réel confirme le pire. Raisonnement,
+modèle de buse et résultats du balayage dans
+[`decisions.md`](decisions.md) D9.
+
+`tools/sweep_decomposition.py` balaie inclinaison et hauteur de coupe :
+**aucune découpe non dégénérée du Y ne passe**. La parade n'est pas dans
+les paramètres.
+
+---
+
+## 6. Cinématique — vérification indépendante
 
 Le build passe par CMake : c'est la seule voie qui marche sur les trois OS
 (Windows n'a pas de `g++`). CMake s'installe par pip, sans droits admin.
@@ -197,7 +229,7 @@ g++ -O2 -std=c++17 rep5x_ik.cpp sanity.cpp -o sanity_test
 
 ---
 
-## 6. Interface graphique — optionnelle
+## 7. Interface graphique — optionnelle
 
 ```bash
 cd cortex/fractal-cortex && python3 slicer_main.py
@@ -211,7 +243,7 @@ plans de coupe, contrôler le résultat.
 
 ---
 
-## 7. DXF pour devis de découpe
+## 8. DXF pour devis de découpe
 
 Si tu construis la machine, il faut les profils plats pour consulter un
 découpeur laser. La CAO de Fractal est un assemblage STEP 3D.
