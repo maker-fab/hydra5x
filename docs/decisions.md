@@ -181,7 +181,41 @@ valant la moitie du trajet utile : marqueurs d'un ordonnancement faible.
 Un slicer mature fait du *combing* — il contourne en restant dans la piece
 plutot que de retracter.
 
-**Ce qui bloque la mesure comparative** : la CLI d'OrcaSlicer est
+**Mesure comparative, meme chunk, meme hauteur de couche** :
+
+| | Cortex | PrusaSlicer 2.7.2 | ecart |
+|---|---|---|---|
+| couches | 141 | 140 | -0,7 % |
+| filament | 1 003 mm | 1 328 mm | **+32 %** |
+| trajet extrude | 30 170 mm | 39 229 mm | +30 % |
+| trajet a vide | 16 009 mm | 5 478 mm | **-66 %** |
+| retractions | 2 946 | 499 | **-83 %** |
+| lignes de G-code | 85 268 | 34 130 | -60 % |
+
+Rapporte a la couche : **20,9 retractions chez Cortex contre 3,6**. Et le
+trajet a vide passe de 53 % du trajet extrude a 14 %. C'est le *combing* :
+Prusa contourne en restant dans la piece la ou Cortex leve et retracte.
+
+**Le contre-sens a ne pas commettre** : Prusa depose **plus** de matiere,
+pas moins -- 3 194 mm3 contre 2 412, soit 55 % du volume plein contre
+41 %. A 20 % de remplissage annonce des deux cotes, Cortex **sous-extrude**.
+Ce n'est pas un gain d'efficacite de sa part, c'est un defaut : parois
+trop maigres. L'ecart de +32 % de filament est donc a son desavantage,
+pas au notre.
+
+**Erreur commise en mesurant** : la premiere version de `compare_slicers.py`
+comptait les reprises apres retraction comme de l'extrusion, ce qui
+gonflait le filament de 2 495 mm chez Prusa et 14 727 mm chez Cortex --
+et donnait un faux « -76 % de filament », exactement l'inverse de la
+realite. Un mouvement d'extrudeur sans deplacement XYZ n'est pas une
+extrusion. Le correctif fait retomber la mesure sur les chiffres que les
+deux slicers annoncent eux-memes : 1 328,0 contre 1 328,02 annonce par
+Prusa, 1 002,9 contre un dernier E a 1 002,89 chez Cortex.
+
+**Conclusion** : l'ecart est structurel, pas cosmetique. La delegation du
+tranchage a un slicer mature est justifiee.
+
+**Ce qui bloque la voie OrcaSlicer** : la CLI d'OrcaSlicer est
 inutilisable en 2.4.2. Son controle de compatibilite process/machine
 compare des noms litteraux la ou l'interface evalue
 `compatible_printers_condition` ; toute paire de prereglages passee par

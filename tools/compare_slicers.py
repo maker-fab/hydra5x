@@ -64,13 +64,18 @@ def mesurer_gcode(chemin):
             de = (e - e_dernier) if absolu_e else e
             e_dernier = e if absolu_e else e_dernier + e
 
-        if de is not None and de > 0:
+        # Un mouvement d'extrudeur SANS deplacement XYZ n'est pas de
+        # l'extrusion : c'est une retraction, une reprise ou une amorce.
+        # Les compter faussait le filament de la valeur totale des reprises
+        # -- +2 495 mm sur Prusa, +14 727 mm sur Cortex.
+        if de is None or abs(d) < 1e-9:
+            if de is not None and de < 0:
+                e_retract += -de
+                n_retractions += 1
+            vide += d
+        elif de > 0:
             extrude += d
             e_total += de
-        elif de is not None and de < 0:
-            e_retract += -de
-            n_retractions += 1
-            vide += d
         else:
             vide += d
 
@@ -124,7 +129,7 @@ def trancher_prusa(binaire, stl, sortie, hauteur_couche=0.2, profil=None):
         "--first-layer-bed-temperature", "60",
         "--retract-length", "5",
         "--retract-speed", "40",
-        "--support-material", "0",
+        "--support-material=0",
         "--brim-width", "0",
         "--skirts", "0",
         "--nozzle-diameter", "0.4",
