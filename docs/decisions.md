@@ -421,6 +421,55 @@ absurde et je l'ai rapporte sans le questionner.
 
 ---
 
+## D11 — Ce que le multidirectionnel rapporte vraiment : 17 % de matiere
+
+Premiere demonstration complete de la chaine, sur une piece de la bonne
+famille : un coude, tube de 6 mm de rayon, virage a 90°, rayon de courbure
+30 mm. `tools/parts.py`.
+
+**Le critere passe.** Decoupe en 4 chunks perpendiculaires a l'axe du
+tube : penetration 0,53 a 0,58 mm au depistage, et **zero contact confirme
+au lancer de rayons** sur les trois chunks reorientes. C'est la premiere
+geometrie du projet qui passe le test de collision.
+
+**Mais le gain matiere est faible.**
+
+| Chunks | Sans support | Avec support | Surcout | Economie vs 3 axes |
+|---|---|---|---|---|
+| 3 axes | 1 215 mm | 1 961 mm | +61 % | -- |
+| 4 | 1 426 mm | 1 672 mm | +17,2 % | 14,8 % |
+| **6** | **1 500 mm** | **1 626 mm** | **+8,4 %** | **17,1 %** |
+| 8 | 1 570 mm | 1 865 mm | +18,8 % | 4,9 % |
+| 12 | 1 700 mm | 1 946 mm | +14,5 % | 0,8 % |
+
+Deux effets s'opposent. Plus de chunks aplatit chaque bloc et reduit le
+support interne. Mais **chaque coupe coute** : parois et faces pleines
+supplementaires. Sans aucun support, la piece passe de 1 215 mm en 3 axes
+a 1 700 mm en 12 chunks -- +40 % de matiere rien qu'en decoupant.
+
+L'optimum est a 6 chunks, pour **17 % d'economie**.
+
+**Ce que ca veut dire pour la decision materielle** : 17 % de filament ne
+justifient pas 2 600 $ et deux axes. **L'argument matiere ne tient pas.**
+
+Les arguments qui restent, et qui n'ont pas ete mesures :
+
+- **Le support irretirable.** Un canal interne coude ne se desupporte pas.
+  La valeur n'y est pas de 17 %, elle est binaire.
+- **L'etat de surface** sous les zones supportees.
+- **La tenue mecanique.** C'est probablement le vrai argument : en
+  multidirectionnel les couches suivent la courbe du tube, alors qu'en
+  3 axes elles sont toutes horizontales et le coude delamine en flexion.
+  Non mesure, et non mesurable sans machine.
+
+**Conclusion honnete** : la chaine fonctionne et le critere discrimine, mais
+la justification economique du multidirectionnel ne passe pas par la
+matiere. Elle passe par les pieces qu'on ne peut pas desupporter et par
+l'orientation des couches -- deux choses que ce projet n'a pas encore
+chiffrees.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
