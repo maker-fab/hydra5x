@@ -1549,6 +1549,65 @@ et elle vient apres.
 
 ---
 
+## D26 — La chaine 3 verins tourne de bout en bout
+
+`test_3points.py` : **6 controles sur 6**, ecarts au niveau du flottant
+(10^-13). Pas de tolerance genereuse -- la cinematique etant exacte en
+forme fermee, tout ecart au-dela du bruit machine serait une erreur.
+
+| controle | resultat |
+|---|---|
+| aller-retour hauteurs <-> pose, grille dense | 6,8.10^-13 |
+| normale du chunk ramenee sur +Z | 1,0.10^-13 deg |
+| centre du plateau immobile | 8,5.10^-14 mm |
+| anisotropie mesuree | 1,5000 a 1,7321 -- exactement 1,5 et racine de 3 |
+| budget de course et reciprocite des formules | 2,8.10^-14 |
+| garde sur course insuffisante | leve, en nommant le chunk |
+
+L'anisotropie n'est plus un resultat annonce, elle est **mesuree sur 720
+azimuts** et retrouve les deux bornes theoriques.
+
+### L'angle de chunk que la machine execute
+
+R=150, 210 mm de course differentielle :
+
+| angle de chunk | ecart pire azimut | reste |
+|---|---|---|
+| 30° | 150,0 mm | 60,0 |
+| 35° | 181,9 mm | 28,1 |
+| **38°** | **203,0 mm** | **7,0** |
+| 39° | 210,4 mm | **hors course** |
+
+**La butee tombe entre 38 et 39°**, ce qui recoupe les 38,95° calcules par
+`angle_max`. Les 35° retenus en D24 laissent 28 mm de reserve.
+
+### De bout en bout
+
+`stitch_chunks.py --machine 3points` produit 37 957 lignes sur la piece en
+Y, `check_collision.py` les relit et rend **le meme verdict que sur la
+sortie berceau** : 2 chunks en collision, 2,27 mm confirmes au lancer de
+rayons.
+
+C'est le controle qui compte : la collision ne depend que de la pose
+relative, donc **les deux machines doivent donner le meme resultat**. Un
+ecart aurait signale une erreur de conversion. Le diff des deux G-code le
+confirme directement -- identiques hors commandes machine, a un mot de
+commentaire pres.
+
+### Ce qui reste, et qui n'est plus de la geometrie
+
+1. **La cinematique Klipper.** Les `MANUAL_STEPPER` basculent le plateau a
+   l'arret ; ils ne coordonnent rien. Suffisant en indexe (D-mouvements),
+   insuffisant des qu'on voudra du continu.
+2. **Le couplage Z/inclinaison pendant le depot.** Le centre du plateau
+   reste a sa consigne -- verifie -- mais un point a distance `r` du centre
+   monte de `r.sin(theta)`. A 35° et r=150, c'est **86 mm**. Deja compte
+   dans le cadre de D24, pas encore compense dans le G-code.
+3. **L'essai de depot incline.** Toujours le seul point que le calcul ne
+   tranchera pas.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
