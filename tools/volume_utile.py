@@ -220,6 +220,25 @@ def profil_inclinaison(args, pas=15.0):
     return {float(a): args.inclinaison for a in azimuts}
 
 
+def courses_requises_mixte(forme, taille, h, alpha, beta,
+                           longueur, demi_largeur, pas_phi=2.0):
+    """Cadre necessaire quand plateau ET tete s'inclinent.
+
+    Les deux couts **s'additionnent**. Le plateau fait balayer la piece,
+    la tete fait balayer son propre corps, et aucune des deux excursions ne
+    prend la place de l'autre : elles se produisent au meme instant, dans
+    la meme direction, et elles s'ajoutent bout a bout.
+
+    C'est le point que la notion de redondance peut faire manquer. Repartir
+    l'inclinaison entre deux organes ne repartit pas la place qu'ils
+    consomment -- elle la cumule.
+    """
+    cx, cy, cz = courses_requises(forme, taille, h, alpha, pas_phi)
+    marge = 2 * (debord_tete(longueur, demi_largeur, beta)
+                 - debord_tete(longueur, demi_largeur, 0.0))
+    return cx + marge, cy + marge, cz
+
+
 def inverse(args):
     """Quel cadre faut-il pour imprimer CETTE piece, selon l'architecture ?"""
     x, y, h = args.cible

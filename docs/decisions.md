@@ -1215,6 +1215,98 @@ une couche inclinee a 45° ?**
 
 ---
 
+## D22 — Marier les deux bascules : oui, mais pas pour economiser
+
+Question : peut-on incliner le plateau ET la tete ? Oui. Mais **les couts
+d'encombrement s'additionnent, ils ne se partagent pas.**
+
+### Pourquoi ils s'ajoutent
+
+Le plateau fait balayer la PIECE. La tete fait balayer SON PROPRE CORPS.
+Les deux excursions se produisent au meme instant, dans la meme direction,
+et se mettent bout a bout. Repartir l'inclinaison entre deux organes ne
+repartit pas la place qu'ils consomment.
+
+C'est exactement le piege que la redondance avait deja tendu une fois, sur
+la collision. Meme forme d'erreur : croire qu'un degre de liberte de plus
+allege un cout, alors qu'il en ajoute un.
+
+### Le chiffre
+
+Cube de 200 mm, tete L=70 w=25, `volume_utile.py` :
+
+**Inclinaison totale 45°**
+
+| plateau | tete | cadre X/Y | cadre Z | enveloppe |
+|---|---|---|---|---|
+| **0°** | **45°** | 284 | **200** | **16,2 L** |
+| 15° | 30° | 309 | 266 | 25,4 L |
+| 30° | 15° | 314 | 315 | 30,9 L |
+| 45° | 0° | 304 | 341 | 31,6 L |
+
+**Inclinaison totale 90°** — le cas des re-entrants (D16)
+
+| plateau | tete | cadre X/Y | cadre Z | enveloppe |
+|---|---|---|---|---|
+| **0°** | **90°** | 290 | **200** | **16,8 L** |
+| 30° | 60° | 375 | 315 | 44,3 L |
+| 45° | 45° | 388 | 341 | **51,5 L** |
+
+**Le partage moitie-moitie est la posture la plus chere**, a chaque angle
+total. A 90° elle coute trois fois le tout-tete.
+
+### Ce que le mariage achete quand meme
+
+Il n'achete pas d'encombrement. Il achete trois choses reelles :
+
+1. **De la course.** Une table a trois points plafonne vers 30-40° par sa
+   mecanique (D20). Au-dela, seule la tete peut fournir. Si on veut a la
+   fois depasser 45° et limiter l'inclinaison de la tete, il faut les deux.
+
+2. **Un reglage entre deux maux.** L'inclinaison de la tete penche la
+   couche et laisse la gravite tirer le cordon ; l'inclinaison du plateau
+   penche la piece et sollicite son adherence. **Plafonner la tete a
+   l'angle ou le cordon tient encore, et laisser le plateau finir** est le
+   seul arbitrage honnete -- et il demande une valeur mesuree qu'on n'a
+   pas.
+
+3. **Des postures d'evitement.** La collision buse-piece ne depend que de
+   la pose relative et ne bouge pas. Mais la collision tete-BATI, elle, en
+   depend : avec deux organes on choisit une posture qui degage le bati
+   sans changer la pose de depot.
+
+### La regle qui rend le mariage abordable
+
+**Le cadre se dimensionne sur la pire posture qu'on s'autorise, pas sur la
+somme des courses.** Si l'on s'interdit d'utiliser les deux bascules en
+meme temps a fort angle, le cadre n'a jamais a payer la ligne du milieu :
+
+    cadre = max( cout tout-tete , cout tout-plateau )
+    et non  cout tete + cout plateau
+
+Concretement : **une bascule a la fois.** Le plateau pour les petits
+angles, ou sa gravite favorable vaut quelque chose et ou son cout en cadre
+est encore faible ; la tete pour les grands angles et les re-entrants, ou
+elle est seule capable et ou son cout est borne.
+
+C'est le mariage utile : deux mecanismes, un seul actif a la fois, et un
+cadre dimensionne sur le plus gros des deux -- **284 x 284 x 341 pour un
+cube de 200**, contre 388 x 388 x 341 si l'on s'autorise le 45/45.
+
+### Ce que ca coute a construire
+
+Deux mecanismes au lieu d'un : un plateau orientable **et** une tete
+inclinable. Sept axes pour cinq degres. Deux cinematiques a ecrire, deux
+references a etalonner, deux sources de jeu. **C'est cher, et ca ne se
+justifie que si le point 2 ci-dessus se revele contraignant** -- c'est-a-
+dire si le cordon ne tient pas sur une couche fortement inclinee.
+
+**Donc l'essai de depot incline (D21) ne decide pas d'un reglage : il
+decide s'il faut construire une machine ou deux mecanismes.** C'est le
+prochain jalon, et il est physique, pas logiciel.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
