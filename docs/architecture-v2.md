@@ -107,12 +107,39 @@ la Fractal.
 - **Couplage Z/inclinaison** : basculer déplace la hauteur du centre, à
   compenser.
 - **Redondance** : tête (2 DOF) + table (3 DOF) + X/Y = sept axes pour six
-  degrés de liberté. Ce n'est pas un défaut — `envelope.md` le notait pour
-  la piste v2 : **le degré excédentaire donne un espace nul exploitable**.
-  La machine peut choisir, parmi les postures qui placent correctement la
-  buse, celle qui maximise la garde. C'est ce qui pourrait annuler le
-  retour du problème de collision, et ça se calcule avec
-  `check_collision.py`.
+  degrés de liberté.
+
+### Ce que la redondance achète — et ce qu'elle n'achète pas
+
+**Elle n'achète pas de garde buse-pièce.** La collision ne dépend que de la
+pose *relative* buse/pièce, et répartir l'inclinaison entre table et tête
+ne la change pas — c'est la définition de la redondance. En tranchage
+planaire la buse est perpendiculaire au plan de dépôt : dans le repère du
+chunk elle est sur +Z, la matière déjà posée est fixe, la collision est
+entièrement déterminée. Aucune liberté.
+
+Une première rédaction affirmait ici que le degré excédentaire pourrait
+annuler le problème de collision. C'est faux, et une simulation semblait
+le confirmer avant qu'on ne regarde ce qu'elle faisait vraiment : elle
+inclinait la buse *par rapport à la couche*, une posture qui n'existe pas.
+
+**Elle achète un arbitrage entre deux maux opposés** :
+
+| table | tête | collision | couche vs gravité | pièce vs gravité |
+|---|---|---|---|---|
+| 0° | 30° | inchangée | 30° | 0° |
+| 15° | 15° | inchangée | 15° | 15° |
+| 30° | 0° | inchangée | 0° | 30° |
+
+Plus la **tête** s'incline, plus le poids tire le cordon fondu dans le plan
+de dépôt : 13 % à 7,5°, 26 % à 15°, **50 % à 30°**. Plus la **table**
+s'incline, plus la pièce risque le décollement et plus l'enveloppe machine
+se réduit.
+
+Les deux optima sont opposés. La redondance permet de **choisir où mettre
+le mal**, pas de le supprimer. Elle sert aussi à éviter les collisions
+machine — tête contre plateau, contre bâti — qui, elles, dépendent bien de
+la posture.
 
 ## Ce qu'il faudrait mesurer avant de décider
 
