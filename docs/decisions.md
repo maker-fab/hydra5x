@@ -1608,7 +1608,7 @@ commentaire pres.
 
 ---
 
-## D27 — Incliner la TETE par le meme procede : trois verins, pas quatre
+## D27 — Incliner la TETE par le meme procede : trois verins, pas quatre  ⟨LECTURE CORRIGEE PAR D28 : c'est le PORTIQUE qui bascule⟩
 
 Idee proposee : appliquer a la tete ce qu'on fait au plateau -- une
 platine suspendue a plusieurs points dont on pilote les hauteurs, donc une
@@ -1704,6 +1704,115 @@ de vis et le bati d'un metre de D24.
 Elle s'ajoute donc a ce que l'essai doit trancher. Cet essai decide
 maintenant de trois choses : l'angle utile, s'il faut deux mecanismes
 (D22), et laquelle des deux architectures construire.
+
+---
+
+## D28 — C'est le portique qui bascule, pas la buse
+
+D27 avait mal lu l'idee. Ce n'est pas la tete qui pivote autour de sa
+pointe sur une petite platine : **c'est le portique entier qui s'incline**,
+porte par ses appuis en Z. La tete continue de se promener en X et Y
+dessus, comme sur n'importe quel CoreXY. Le plateau, lui, ne bouge plus.
+
+C'est une Voron 2.4 dont le portique, au lieu de rester horizontal,
+prend une pente.
+
+### Ce que ca change par rapport a D27 -- et c'est beaucoup
+
+**Il n'y a plus de compensation a inventer.** D27 chiffrait 46 mm de
+derive de pointe a compenser par RTCP. Ici la question ne se pose pas dans
+les memes termes : incliner le portique deplace la tete, et **la tete se
+rattrape avec ses propres axes X et Y**, qui sont deja la et deja rapides.
+Ce n'est plus un mecanisme a ajouter, c'est un changement de repere.
+
+**Le changeur d'outil devient indifferent a l'inclinaison.** Les docks
+sont montes sur le portique : ils s'inclinent avec lui. La geometrie
+relative tete/dock ne change jamais, donc **on accoste a n'importe quel
+angle**, sans revenir a une reference. C'est mieux que la solution (b) de
+D20, qui imposait de remettre la bascule a zero avant chaque changement.
+
+**La piece ne bouge toujours pas.** Plateau fixe et plat : pas de
+decollement, pas de balayage, pas d'effondrement de volume par la taille
+de la piece (D21). L'avantage structurel de la famille « tete inclinable »
+est conserve entier.
+
+### Le cout, et il est franc : la course
+
+Meme formule, mais le portique est **plus grand que le plateau**, et la
+course suit :
+
+| ce qui bascule | portee des appuis | 25° | 35° | 45° |
+|---|---|---|---|---|
+| platine de tete (D27) | 87 mm | 40 mm | 61 mm | 87 mm |
+| **plateau 400 (D24)** | **260 mm** | 121 mm | **182 mm** | 260 mm |
+| portique, appuis a 300 | 260 mm | 121 mm | 182 mm | 260 mm |
+| **portique 400, 4 coins** | **566 mm** | 264 mm | **396 mm** | 566 mm |
+
+Avec quatre appuis aux coins d'un portique carre, **la portee passe par la
+diagonale** : 566 mm pour un portique de 400. A 35° il faut **396 mm de
+course differentielle**, contre 182 pour le plateau. Chaque colonne Z doit
+alors offrir 400 + 396 = **796 mm**, et le bati depasse 1,2 m.
+
+Le levier existe : **rapprocher les appuis des centres de cotes plutot que
+des coins.** Trois appuis a 300 mm de portee ramenent le differentiel a
+182 mm, exactement comme le plateau. Le portique devient porte-a-faux a ses
+coins -- meme arbitrage que pour le plateau en D24, resolu par la rigidite
+de la poutre et non par l'ecartement des appuis.
+
+### La contrainte de conception a ne pas manquer
+
+**Les moteurs CoreXY doivent etre embarques sur le portique qui bascule.**
+Si les moteurs restent sur le bati et que les courroies montent vers un
+portique incline, les quatre trajets de courroie ne varient plus de la
+meme facon : la boucle CoreXY se desaccorde et produit une derive X/Y a
+chaque bascule.
+
+Le portique doit donc etre un **ensemble rigide et autonome** -- moteurs,
+courroies, chariot -- que les appuis Z se contentent de porter. C'est
+l'architecture de la Voron 2.4 a portique volant, **a confirmer sur sa CAO
+avant de s'en reclamer**.
+
+### Surface utile
+
+Un portique incline se raccourcit en projection :
+
+| inclinaison | course X ou Y utile |
+|---|---|
+| 15° | x 0,966 -- 400 devient 386 mm |
+| 35° | x 0,819 -- 400 devient 328 mm |
+| 45° | x 0,707 -- 400 devient 283 mm |
+
+Perte reelle mais modeste, et sans commune mesure avec les 75 a 85 % que
+coute le balayage d'une piece sur un plateau basculant (D19, D21).
+
+### Ce que ca ne change pas
+
+**L'argument qui a decide D23 tient toujours.** Un portique incline depose
+dans un plan incline : la buse est perpendiculaire a la couche, et la
+gravite tire le cordon dans le plan de cette couche. Exactement la meme
+physique que la tete inclinable. Le plateau basculant reste le seul a
+garder le plan de depot horizontal.
+
+### Les trois familles, cote a cote
+
+| | plateau bascule | portique bascule | platine de tete |
+|---|---|---|---|
+| plan de depot vs gravite | **horizontal** | incline | incline |
+| la piece bouge | oui | **non** | **non** |
+| volume perdu a 35° | 60 a 77 % | ~18 % | ~18 % |
+| course differentielle a 35° | 182 mm | 182 a 396 mm | **61 mm** |
+| changeur d'outil | indifferent | **indifferent** | retour a la reference |
+| compensation de pointe | aucune | changement de repere | RTCP a ecrire |
+| masse basculee | plateau + piece | **portique entier** | platine + tete |
+| firmware de base | a ecrire | a ecrire | a ecrire |
+
+**Statut : troisieme candidat serieux, a egalite avec D27.** Il est plus
+lourd a basculer et demande plus de course, mais il supprime la
+compensation de pointe et rend le changeur d'outil indifferent a l'angle.
+
+Les trois familles attendent le meme resultat : `docs/essai-depot-incline.md`.
+Si le cordon tient sur une couche inclinee, **deux des trois** deviennent
+meilleures que le plateau basculant retenu en D23. Sinon D23 tient seul.
 
 ---
 
