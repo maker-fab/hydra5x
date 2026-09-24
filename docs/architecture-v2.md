@@ -69,9 +69,15 @@ Trois actionneurs verticaux sous le plateau donnent `Z` **plus le
 basculement dans n'importe quel azimut** — pas un axe B unique. Cinématique
 parallèle, type tripode.
 
-**Ce que ça supprime** : l'axe A. La pièce n'a jamais à tourner sur
-elle-même, donc ni collecteur tournant, ni enroulement de câbles. Et le
-berceau basculant disparaît, avec la garde de 12 mm.
+**Ce que ça supprime** : l'axe A, puisque la pièce n'a jamais à tourner sur
+elle-même. Et le berceau basculant, avec la garde de 12 mm.
+
+**Ce que ça ne supprime pas d'utile** : l'argument « plus de bague
+tournante, plus d'enroulement de câbles » ne tient pas. Fractal et Rep5x
+font tous deux tourner leur axe **sans limite** grâce à une bague, et
+Fractal y fait passer **l'alimentation du plateau chauffant** — le cas
+difficile. C'est un problème résolu pour quelques euros, pas une contrainte
+à contourner par l'architecture.
 
 Débattement, calculé :
 

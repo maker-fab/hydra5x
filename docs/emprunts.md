@@ -57,6 +57,10 @@ confirmer ce que `B` incline sur sa machine, plateau ou tête.
 | Configurations HH | Rep5x, Open5x | la pièce ne bascule pas ; adhérence et enveloppe préservées | à évaluer — voir D15 |
 | **Configuration mixte 4 axes** | **[Core R-Theta](https://github.com/jyjblrd/Core-R-Theta-4-Axis-Printer)**, 915 ★, CAO STEP + PCB KiCad + config RepRapFirmware | plateau qui tourne sans basculer, **buse inclinable sur 270°** (B de −180° à +90°). Supprime le balancement de la pièce ET donne l'accès en biais | **à évaluer sérieusement** — voir D18 |
 | Tête inclinable bridée | ce projet, piste v2 | soulage la garde plateau-buse | **retenu en principe** |
+| **Montage « Core » X + B** | [Core R-Theta](https://github.com/jyjblrd/Core-R-Theta-4-Axis-Printer) | deux moteurs couplés par courroie pilotent translation ET rotation de tête, **les deux restent sur le chariot** — supprime la masse sur la buse | **retenu en principe** |
+| **Bague tournante** | Fractal 5 Pro, Rep5x | rotation **sans limite** ; Fractal y passe l'alimentation du plateau chauffant | **retenu** — le problème d'enroulement est résolu, pas à contourner |
+| Table 3 points parallèle | proposition | Z + basculement tout azimut sur trois actionneurs ; supprime le berceau | **à évaluer** — voir architecture-v2.md |
+| Changeur multi-hotends | Archer, multipoleguy — [multipoledynamics.com](https://multipoledynamics.com/) | 5 axes + CoreXY + quatre hotends interchangeables | à regarder, statut du logiciel inconnu |
 | Embase sacrificielle 9 mm | ce projet | supprime la contrainte des premiers millimètres | **retenu** |
 
 ## Logiciel
