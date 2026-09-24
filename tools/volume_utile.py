@@ -168,6 +168,34 @@ def courses_tete_inclinable(courses, longueur, demi_largeur, b_deg):
     return max(cx - perte, 0.0), max(cy - perte, 0.0), cz
 
 
+def courses_requises(forme, taille, h, theta_deg, pas_phi=2.0):
+    """Courses X, Y, Z necessaires pour une piece donnee, a cette inclinaison.
+
+    **Le calcul inverse, et c'est le bon sens de lecture.** Fixer le cadre
+    et regarder le volume fondre fait croire a une perte de capacite. Il
+    n'y en a pas : un cadre est fait de profiles et de courroies, on peut
+    l'agrandir. Ce que la bascule coute reellement, c'est **une machine
+    plus grosse pour la meme piece** -- pas une piece plus petite.
+
+    Lu dans ce sens, l'ecart entre les deux architectures se deplace :
+    l'empreinte au sol est comparable, c'est la HAUTEUR qui separe.
+    """
+    cx = cy = cz = 0.0
+    for phi in np.arange(0.0, 180.0, pas_phi):
+        q = basculer(sommets(forme, taille, h), theta_deg, phi)
+        cx = max(cx, q[:, 0].ptp())
+        cy = max(cy, q[:, 1].ptp())
+        cz = max(cz, q[:, 2].max() - min(q[:, 2].min(), 0.0))
+    return cx, cy, cz
+
+
+def courses_requises_tete(cote_x, cote_y, h, longueur, demi_largeur, b_deg):
+    """Idem, quand c'est la tete qui s'incline : la piece ne bouge pas."""
+    perte = 2 * (debord_tete(longueur, demi_largeur, b_deg)
+                 - debord_tete(longueur, demi_largeur, 0.0))
+    return cote_x + perte, cote_y + perte, h
+
+
 def cout_outils(n, largeur_dock, profondeur_dock, cx, cy):
     """Ce que N outils parques retirent aux courses."""
     if n <= 1:
@@ -192,13 +220,48 @@ def profil_inclinaison(args, pas=15.0):
     return {float(a): args.inclinaison for a in azimuts}
 
 
+def inverse(args):
+    """Quel cadre faut-il pour imprimer CETTE piece, selon l'architecture ?"""
+    x, y, h = args.cible
+    taille = max(x, y) / 2.0
+    forme = args.forme_piece
+    ref = x * y * h if forme == "carre" else np.pi * taille ** 2 * h
+
+    print(f"=== piece visee : {x:.0f} x {y:.0f} x {h:.0f} mm "
+          f"({forme}, {ref/1e6:.2f} L) ===\n")
+    print(f"  {'incl.':>6s} {'architecture':<20s} {'cadre necessaire':>22s} "
+          f"{'enveloppe':>10s} {'ratio':>7s}")
+    for theta in (0, 15, 30, 45, 60, 90):
+        for nom, c in (
+            ("plateau basculant",
+             courses_requises(forme, taille, h, theta)),
+            ("tete inclinable",
+             courses_requises_tete(x, y, h, args.tete[0], args.tete[1], theta)),
+        ):
+            if nom.startswith("plateau") and theta > 60:
+                continue          # au-dela, la piece est retournee : bridage
+            env = c[0] * c[1] * c[2]
+            print(f"  {theta:5.0f}° {nom:<20s} "
+                  f"{c[0]:6.0f} x{c[1]:5.0f} x{c[2]:5.0f} mm "
+                  f"{env/1e6:8.1f} L {env/ref:6.1f}x")
+        print()
+    print("  « ratio » = volume de l'enveloppe machine rapporte a la piece.")
+    print("  Au-dela de 60°, un plateau basculant retourne la piece :")
+    print("  l'adherence ne la tient plus, il faut un bridage mecanique.")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--course", type=float, nargs=3, required=True,
+    ap.add_argument("--course", type=float, nargs=3,
                     metavar=("X", "Y", "Z"))
-    ap.add_argument("--plateau", type=float, required=True,
-                    help="cote si carre, diametre si rond, mm")
+    ap.add_argument("--cible", type=float, nargs=3, metavar=("X", "Y", "Z"),
+                    help="calcul INVERSE : piece visee, on en deduit le "
+                         "cadre necessaire pour chaque architecture")
+    ap.add_argument("--plateau", type=float, default=None,
+                    help="cote si carre, diametre si rond, mm "
+                         "(inutile avec --cible)")
     ap.add_argument("--forme-plateau", choices=("rond", "carre"), default="carre")
     ap.add_argument("--forme-piece", choices=("rond", "carre"), default="carre")
     ap.add_argument("--inclinaison", type=float, default=45.0)
@@ -226,6 +289,11 @@ def main():
                     metavar=("LARGEUR", "PROFONDEUR"))
     ap.add_argument("--pas", type=float, default=2.0)
     args = ap.parse_args()
+
+    if args.cible:
+        return inverse(args)
+    if not args.course or args.plateau is None:
+        ap.error("donner --course X Y Z et --plateau, ou --cible X Y Z")
 
     cx, cy, cz = args.course
     cx, cy = cout_outils(args.outils, args.dock[0], args.dock[1], cx, cy)
