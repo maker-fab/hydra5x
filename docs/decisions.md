@@ -1307,7 +1307,7 @@ prochain jalon, et il est physique, pas logiciel.
 
 ---
 
-## D23 — Table inclinable retenue. Reste a choisir le mecanisme
+## D23 — Table inclinable retenue. Reste a choisir le mecanisme  ⟨ROUVERTE PAR D29 : son argument decisif ne tient pas⟩
 
 Decision prise : **c'est le plateau qui s'oriente, pas la tete.** D2 est
 refermee sur ce point, apres avoir ete rouverte par D15.
@@ -1813,6 +1813,116 @@ compensation de pointe et rend le changeur d'outil indifferent a l'angle.
 Les trois familles attendent le meme resultat : `docs/essai-depot-incline.md`.
 Si le cordon tient sur une couche inclinee, **deux des trois** deviennent
 meilleures que le plateau basculant retenu en D23. Sinon D23 tient seul.
+
+---
+
+## D29 — L'argument de la gravite ne tient pas. D23 est rouverte
+
+Simulation demandee pour trancher entre les trois familles. Elle tranche,
+mais pas ou on l'attendait : **elle detruit l'argument qui avait decide
+D23.**
+
+### L'erreur de raisonnement
+
+Toutes les notes precedentes -- D16, D21, D22, D23, D27, D28 -- reposaient
+sur : « une tete inclinee depose sur un plan incline, et a 30° la gravite
+tire le cordon avec 50 % de son poids ».
+
+C'est exact et **sans portee**. Une composante de force ne dit rien tant
+qu'on ne la compare pas a ce qui lui resiste. Je ne l'avais jamais fait.
+
+Ce qui resiste : la **viscosite** du polymere fondu et la **tension
+superficielle**. Les deux varient en `h^2`. A 0,2 mm d'epaisseur, elles
+sont ecrasantes.
+
+### Les chiffres (`tools/simu_depot_incline.py`)
+
+PLA, couche 0,2 mm, cordon fondu pendant 1 s :
+
+| inclinaison | nombre de Bond | derive du cordon | en part de couche |
+|---|---|---|---|
+| 15° | 0,0041 | 0,08 µm | 0,04 % |
+| 30° | 0,0078 | 0,16 µm | 0,08 % |
+| **45°** | **0,0111** | **0,22 µm** | **0,11 %** |
+| 90° | 0,0157 | 0,31 µm | 0,16 % |
+
+**Bond = 0,011 a 45°** : la tension superficielle domine la gravite d'un
+facteur cent. La derive visqueuse est de **0,2 micron**, mille fois moins
+que la hauteur de couche.
+
+La capillarite ne cesserait de dominer (Bond = 1) qu'a une couche de
+**1,90 mm** -- neuf fois la notre. L'argument vaudrait pour une coulee de
+beton, pas pour un cordon de 0,2 mm.
+
+### Et ce n'est pas un resultat fragile
+
+Balayage de la viscosite sur **quatre decades** et du temps de figeage de
+0,1 a 20 s, a 45°. La derive n'atteint une hauteur de couche que pour
+`mu = 1 Pa.s` -- de l'eau tiede, pas un polymere fondu, qui se situe entre
+100 et 10 000.
+
+Quatre materiaux : PLA 0,11 %, ABS 0,05 %, PETG 0,07 %, TPU 0,03 %.
+Couches de 0,2 a 1,2 mm : de 0,2 % a 1,3 %.
+
+Un polymere fondu est de plus **rheofluidifiant** : au repos, a faible
+cisaillement, sa viscosite est la PLUS HAUTE. Prendre une viscosite
+newtonienne est donc conservateur dans le bon sens.
+
+### Ce que la simulation ne dit pas
+
+- Les **ponts et surplombs sans substrat** : la, le cordon pend
+  effectivement. Mais c'est precisement ce que la 5 axes sert a eviter.
+- Le **cisaillement de la buse**, qui domine largement la gravite et n'est
+  pas directionnel.
+- L'**etat de surface** et l'aspect, que seul un essai montrera.
+
+`docs/essai-depot-incline.md` reste a faire -- mais il devient une
+**confirmation**, plus un point de decision. L'architecture n'attend plus
+apres lui.
+
+### Ce que la comparaison donne alors (`tools/comparer_architectures.py`)
+
+Piece de 200 x 200 x 200 a 35° :
+
+| famille | course diff. | course d'un verin | cadre Z | inertie relative |
+|---|---|---|---|---|
+| plateau basculant (D23) | 182 mm | 382 mm | **326 mm** | 39 x |
+| portique, appuis milieux | 210 mm | 410 mm | 200 mm | 55 x |
+| portique, 4 coins (D28) | 396 mm | 596 mm | 200 mm | 198 x |
+| **platine de tete (D27)** | **61 mm** | **261 mm** | **200 mm** | **1 x** |
+
+La duree de bascule ne departage rien en indexe : 2 a 5 minutes sur une
+impression de six heures, moins de 1,5 %.
+
+**Elle departage tout en continu.** L'inertie croit en `masse x portee^2` :
+la platine est **39 a 198 fois** plus favorable. C'est le seul organe
+qu'on puisse esperer piloter pendant le depot. Les trois autres sont des
+mecanismes d'indexation, et le resteront.
+
+Or D17 a etabli que le multidirectionnel est la discretisation grossiere
+du non-planaire, et D14 que les 2 a 3x de resistance viennent du continu.
+**Choisir un organe qui ne peut pas aller au continu, c'est se fermer le
+seul gain mecanique reel du projet.**
+
+### Decision
+
+**D23 est rouverte.** Le plateau basculant avait ete retenu sur un
+argument qui ne tient pas, et il est le plus penalisant sur les criteres
+qui restent : 326 mm de cadre en Z contre 200, et une inertie qui
+l'enferme dans l'indexe.
+
+**La platine de tete (D27) devient le candidat de tete** : course la plus
+courte, bati le plus bas, piece qui ne bouge jamais, et la seule voie
+ouverte vers le non-planaire continu.
+
+Ce qu'elle doit encore payer, et qui est du logiciel :
+
+1. **La compensation du point pilote.** Pivot a ~80 mm au-dessus de la
+   pointe, donc 46 mm de derive a 35°. A ecrire avant le premier essai.
+2. **L'encombrement de la tete**, qui grossit de la platine : 84 a 102 mm
+   de cadre de chaque cote.
+
+Ces deux-la sont bornes et connus. L'inertie du plateau ne l'est pas.
 
 ---
 
