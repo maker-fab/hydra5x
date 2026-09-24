@@ -63,6 +63,8 @@ confirmer ce que `B` incline sur sa machine, plateau ou tête.
 | Changeur multi-hotends | Archer, multipoleguy — [multipoledynamics.com](https://multipoledynamics.com/hardware) | quatre outils sur connecteurs rapides, électriques ET filament ; RepRapFirmware détecte le nombre d'outils et reconfigure l'interface | **écarté pour l'instant** — hors périmètre tant que la cinématique n'est pas figée, mais l'idée du connecteur rapide filament est à garder |
 | **Plateau « Multipole »** | Archer, [Hardware](https://multipoledynamics.com/hardware) | plateau dont l'orientation change **en continu**, sur un CoreXY ordinaire, volume 300×300×350. Pas de berceau basculant visible | **à évaluer** — confirme que la voie « plateau orientable sans berceau » est tenue par quelqu'un d'autre ; **cinématique non publiée**, aucune CAO, rien à copier |
 | **Changeur d'outil DAKSH V2** | [ankurv2k6/daksh-toolchanger-v2](https://github.com/ankurv2k6/daksh-toolchanger-v2), 337 ★ | changeur **entierement imprime**, aucune piece usinee, verrouillage mecanique sans servo inspire de la Prusa XL. Moins de 4 s par changement, calibration XYZ automatique entre outils, config et macros Klipper fournies. **Compatible Voron Trident** -- exactement la base retenue en D23 | **a evaluer serieusement** — mais licence contradictoire, voir ci-dessous |
+| **Bati consolide en quatre pieces** | Generation One, [generativemachine.com](https://generativemachine.com/) | « consolidates the entire machine into a four-part assembly, dramatically increasing global stiffness » : moins d'assemblages, donc moins de souplesse parasite. A l'oppose d'une cage de profiles et d'equerres | **a evaluer** — l'idee est libre, les fichiers non |
+| Bati alu optimise en topologie | idem | raideur par la forme plutot que par la masse | **a evaluer** — `fea_bending.py` existe deja ici pour verifier une poutre |
 | Embase sacrificielle 9 mm | ce projet | supprime la contrainte des premiers millimètres | **retenu** |
 
 ## Logiciel
@@ -72,6 +74,7 @@ confirmer ce que `B` incline sur sa machine, plateau ou tête.
 | Fork Cortex maintenu | [hydra5x-slicer](https://github.com/maker-fab/hydra5x-slicer) | l'amont est inactif depuis juillet 2025 | **retenu** |
 | Tranchage délégué à un slicer mature | PrusaSlicer en CLI | −82 % de rétractions, −58 % de trajet à vide | **retenu** |
 | MaxiSlicer | Archer — [Software](https://multipoledynamics.com/software) | slicer 5 axes non-planaire « pour tout le monde », multi-cinématiques, aussi utilisable en 3 axes | **écarté faute d'existence** — en développement, aucune version publiée, aucune licence annoncée, aucun dépôt. À re-regarder, pas à attendre |
+| aibuild | partenaire de Generation One | tranchage multi-axes oriente surface, **avec simulation de mouvement et controle de collision avant impression** | **ecarte** — commercial. Mais confirme que le controle de collision fait partie du produit : `check_collision.py` vise juste |
 | CLI OrcaSlicer | — | meilleure planification que Prusa | **bloqué** — bug de compatibilité en 2.4.2, correctif sur `main` non publié |
 
 **Ce que dit Multipole Dynamics, et qui recoupe ce projet** : la 5 axes bute
@@ -97,6 +100,26 @@ non.
 donc un plateau sur QUATRE points. Notre table basculante en demande
 exactement trois. Le changeur lui-meme est cote TETE et se moque de ce que
 fait le plateau (D20) -- c'est la partie a reprendre. Le systeme Z, non.
+
+**Generation One (Generative Machine, Bristol)** : annoncee open source en
+mai 2025, **elle ne l'est pas**. Le site est passe en pre-commande, le
+tranchage est confie a aibuild, un produit payant. Ni CAO ni code publies.
+Rien a prendre en fichiers ; deux idees a prendre quand meme, ci-dessus.
+
+Un point de leur communication recoupe **exactement** ce que D29 a chiffre :
+« the five-axis system will rotate the object as the job proceeds [...] it
+has to lift the prints and move them precisely. That requires a far
+stronger mechanical design ». Ils ont choisi de deplacer la piece, et ont
+du escalader jusqu'au **bati alu optimise en topologie** pour tenir la
+raideur. Nous avons choisi de ne plus la deplacer du tout : le probleme ne
+se pose plus.
+
+**Signal a ne pas ignorer sur le firmware.** Deux projets 5 axes vivants --
+Archer et Generation One -- utilisent tous deux **Duet3D et
+RepRapFirmware**, pas Klipper. D3 avait retenu Klipper parce que Cortex en
+emet le G-code. C'est un bon argument pour l'indexe ; ca pourrait ne plus
+l'etre pour du 5 axes coordonne, ou RRF a de l'avance. **A re-examiner
+avant d'acheter l'electronique**, pas apres.
 
 ---
 
