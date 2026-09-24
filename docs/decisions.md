@@ -1451,15 +1451,27 @@ mais met le plateau en porte-a-faux. Un plateau de 400 sur des appuis a
 R=125 deborde de 158 mm a ses coins ; avec 2 kg de piece dessus, la fleche
 n'est plus negligeable a l'echelle d'une couche.
 
-**Retenu : appuis a R=150 mm**, 182 mm de course differentielle pour 35°,
-133 mm de porte-a-faux. Le levier pour tenir la fleche est l'**epaisseur et
-le nervurage du plateau**, pas le rayon des appuis.
+**Corrige apres validation** (`cinematique_3points.py`) : les 182 mm
+donnent **exactement 35,0°**, marge nulle. Il faut distinguer l'angle que
+le mecanisme atteint en butee de l'angle qu'on s'autorise a commander.
+
+| rayon des appuis | porte-a-faux | 35° en butee | 35° a 90 % | 35° a 80 % |
+|---|---|---|---|---|
+| 200 mm | 83 mm | 243 mm | 279 mm | 332 mm |
+| **150 mm** | **133 mm** | 182 mm | **210 mm** | 249 mm |
+| 125 mm | 158 mm | 152 mm | 175 mm | 207 mm |
+
+**Retenu : appuis a R=150 mm, 210 mm de course differentielle**, soit 35°
+utilisables a 90 % de la butee (38,9° mecaniques). Sur une course de vis,
+90 % est une marge suffisante -- on connait ses butees, contrairement a une
+garde geometrique. Le levier contre la fleche du porte-a-faux est
+l'**epaisseur et le nervurage du plateau**, pas le rayon des appuis.
 
 ### Ce que ca fait a la hauteur de la machine
 
 La course differentielle s'ajoute a la course d'impression sur chaque vis :
 
-    course d'une vis = 400 (impression) + 182 (differentiel) = 582 mm
+    course d'une vis = 400 (impression) + 210 (differentiel) = 610 mm
 
 Plus la plongee du coin du plateau a 35° -- **162 mm** pour un carre de
 400 -- qui doit etre libre sous le plateau. Plus le plateau, le portique,
@@ -1474,6 +1486,66 @@ rigidite a obtenir.
 ### Ce qui reste inchange
 
 Tout le raisonnement de D23. Le plateau grandit, la cinematique non.
+
+---
+
+## D25 — Inclinaison du plateau : validee, avec deux corrections
+
+`cinematique_3points.py` valide l'inclinaison avant toute mecanique. Le
+plateau est traite comme ce qu'il est, un plan rigide sur trois hauteurs
+imposees :
+
+    h_i = z + R . cos(azimut_i - phi) . tan(theta)
+
+Aller-retour verifie exact sur douze azimuts : la pose se relit sans perte
+depuis les trois hauteurs.
+
+### Correction 1 — c'est une tangente, pas un sinus
+
+Les verins sont **verticaux**, donc les points d'appui gardent leur
+distance HORIZONTALE au centre quand le plateau s'incline. La hauteur d'un
+plan de pente theta a la distance d vaut `d.tan(theta)`, pas `d.sin(theta)`.
+
+Sans consequence sur les chiffres de D24, qui utilisaient deja la tangente
+-- mais une premiere ecriture de l'outil avait le sinus, et elle annoncait
+54° la ou le mecanisme en donne 35.
+
+### Correction 2 — l'ecart entre verins depend de l'azimut
+
+L'outil affirmait d'abord que l'ecart de hauteur etait independant de
+l'azimut. **Faux, et la table qu'il imprimait juste au-dessus le
+contredisait** : 129 mm dans un azimut, 149 mm dans un autre.
+
+`max - min` de `cos(a - phi)` sur trois azimuts a 120° vaut **1,5** quand
+la pente passe entre deux verins et **racine de 3** quand elle passe par un
+verin. **15 % d'ecart**, et c'est le pire qui dimensionne.
+
+    course differentielle = V3 . R . tan(theta)
+
+C'est la meme anisotropie que `table_3points.py` mesurait deja par la
+portee des appuis. Les deux outils disent maintenant la meme chose.
+
+### Ce que ca donne sur la machine retenue
+
+Plateau 400, appuis a R=150, **210 mm de course differentielle** :
+
+| | valeur |
+|---|---|
+| inclinaison en butee | 38,9° |
+| inclinaison commandee, a 90 % | **35,0°** |
+| ecart de hauteur a 35°, pire azimut | 182 mm |
+| ecart a 35°, azimut favorable | 158 mm |
+| course d'une vis | 400 + 210 = **610 mm** |
+
+### Ce que cet outil ne traite pas, exprès
+
+La liaison mecanique des appuis. Trois rotules rigides sur trois
+verticales se bloqueraient -- un plateau rigide garde ses distances entre
+points, trois points contraints sur trois verticales non. Il faudra liberer
+un degre lateral par jambe.
+
+**Ca ne change aucun angle calcule ici.** C'est de la conception d'appui,
+et elle vient apres.
 
 ---
 
