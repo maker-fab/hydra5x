@@ -60,7 +60,8 @@ confirmer ce que `B` incline sur sa machine, plateau ou tête.
 | **Montage « Core » X + B** | [Core R-Theta](https://github.com/jyjblrd/Core-R-Theta-4-Axis-Printer) | deux moteurs couplés par courroie pilotent translation ET rotation de tête, **les deux restent sur le chariot** — supprime la masse sur la buse | **retenu en principe** |
 | **Bague tournante** | Fractal 5 Pro, Rep5x | rotation **sans limite** ; Fractal y passe l'alimentation du plateau chauffant | **retenu** — le problème d'enroulement est résolu, pas à contourner |
 | Table 3 points parallèle | proposition | Z + basculement tout azimut sur trois actionneurs ; supprime le berceau | **à évaluer** — voir architecture-v2.md |
-| Changeur multi-hotends | Archer, multipoleguy — [multipoledynamics.com](https://multipoledynamics.com/) | 5 axes + CoreXY + quatre hotends interchangeables | à regarder, statut du logiciel inconnu |
+| Changeur multi-hotends | Archer, multipoleguy — [multipoledynamics.com](https://multipoledynamics.com/hardware) | quatre outils sur connecteurs rapides, électriques ET filament ; RepRapFirmware détecte le nombre d'outils et reconfigure l'interface | **écarté pour l'instant** — hors périmètre tant que la cinématique n'est pas figée, mais l'idée du connecteur rapide filament est à garder |
+| **Plateau « Multipole »** | Archer, [Hardware](https://multipoledynamics.com/hardware) | plateau dont l'orientation change **en continu**, sur un CoreXY ordinaire, volume 300×300×350. Pas de berceau basculant visible | **à évaluer** — confirme que la voie « plateau orientable sans berceau » est tenue par quelqu'un d'autre ; **cinématique non publiée**, aucune CAO, rien à copier |
 | Embase sacrificielle 9 mm | ce projet | supprime la contrainte des premiers millimètres | **retenu** |
 
 ## Logiciel
@@ -69,7 +70,19 @@ confirmer ce que `B` incline sur sa machine, plateau ou tête.
 |---|---|---|---|
 | Fork Cortex maintenu | [hydra5x-slicer](https://github.com/maker-fab/hydra5x-slicer) | l'amont est inactif depuis juillet 2025 | **retenu** |
 | Tranchage délégué à un slicer mature | PrusaSlicer en CLI | −82 % de rétractions, −58 % de trajet à vide | **retenu** |
+| MaxiSlicer | Archer — [Software](https://multipoledynamics.com/software) | slicer 5 axes non-planaire « pour tout le monde », multi-cinématiques, aussi utilisable en 3 axes | **écarté faute d'existence** — en développement, aucune version publiée, aucune licence annoncée, aucun dépôt. À re-regarder, pas à attendre |
 | CLI OrcaSlicer | — | meilleure planification que Prusa | **bloqué** — bug de compatibilité en 2.4.2, correctif sur `main` non publié |
+
+**Ce que dit Multipole Dynamics, et qui recoupe ce projet** : la 5 axes bute
+sur un œuf et une poule — pas de machines parce qu'il n'y a pas de logiciel,
+pas de logiciel parce qu'il n'y a pas de machines. Ils tranchent que **le
+logiciel est le gros morceau**, et construisent une machine surtout pour
+avoir de quoi le démontrer.
+
+C'est la même conclusion qu'ici, obtenue autrement : la mécanique existe
+déjà (Fractal, Core R-Theta, Rep5x, tous publiés), c'est le tranchage qui
+manque. Différence de méthode : eux écrivent un slicer neuf et fermé, on
+part d'un existant libre.
 
 ---
 
