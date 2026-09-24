@@ -990,6 +990,130 @@ firmware, qui n'existe nulle part.
 
 ---
 
+## D20 — Plateau carre, bascule a deux axes, et le chargement des tetes
+
+Suite directe de D19, sur trois precisions demandees. `volume_utile.py` et
+`table_3points.py` portent les calculs.
+
+### Une correction a D19
+
+Le tableau d'inclinaison des trois points y prenait un bras de levier de
+1,5 x rayon. **C'est l'azimut favorable.** Un triangle equilateral a une
+portee qui varie de 1,5 a 1,732 x rayon selon l'azimut de bascule. La
+limite d'une machine est son pire azimut :
+
+| rayon des appuis | course differentielle | pire azimut | utile (80 %) |
+|---|---|---|---|
+| 100 mm | 150 mm | **40,9°** (et non 45,0) | 32,7° |
+| 150 mm | 150 mm | 30,0° | 24,0° |
+| 150 mm | 200 mm | 37,6° | 30,1° |
+
+### Plateau carre — gagnant a plat, perdant en bascule
+
+Un plateau carre de 300 mm contient une piece de 300x300, la ou un Ø300
+n'en contient qu'une de Ø300. A plat, **22,50 L contre 17,67 L**, +27 %.
+
+En bascule, l'avantage s'inverse. La piece carree presente sa **diagonale**
+dans les azimuts a 45° : 41 % d'etendue en plus, exactement la ou une table
+a trois points equilaterale est deja la plus faible. Les deux anisotropies
+se cumulent, elles ne se compensent pas.
+
+Cadre X300 Y300 Z250, plateau carre 300 :
+
+| inclinaison | piece carree | piece ronde |
+|---|---|---|
+| 0° | **22,50 L** | 17,67 L |
+| 15° | 11,01 L | 9,98 L |
+| 30° | 5,30 L | 7,45 L |
+| 45° | **3,25 L** (−85,5 %) | **5,07 L** (−71,3 %) |
+
+**Le plateau carre est le bon choix ; la piece carree ne l'est pas.** Passe
+~25° d'inclinaison, un cylindre bat un cube de plus de 50 %. Le plateau
+reste carre parce qu'il est plus simple a fabriquer, a chauffer et a
+brider, et parce que le bas de la plage -- ou se fait le gros du travail --
+lui donne raison.
+
+Il faut aussi **150 mm de vide sous un plateau carre de 300 mm a 45°**,
+contre 106 mm pour un Ø300 : c'est la diagonale du plateau qui plonge.
+
+### Bascule a deux axes — un cardan, pas trois points
+
+Deux rotations orthogonales composent leurs angles :
+
+    cos(theta) = cos(alpha) . cos(beta)
+
+**45° sur chaque axe donnent 60° de bascule reelle.** Le cardan est donc
+plus efficace que ses courses ne le laissent croire -- mais seulement en
+diagonale : 45,2° garantis dans le pire azimut, 60,0° en diagonale.
+
+**Son anisotropie est l'inverse de celle des trois points** : fort en
+diagonale, faible sur ses axes ; le triangle equilateral fait le contraire.
+Mauvaise nouvelle pour un plateau carre, dont la diagonale est justement
+l'azimut ou la piece deborde le plus. La encore, les defauts se cumulent.
+
+Ce que le cardan coute face aux trois points : le berceau revient, avec ses
+paliers, son encombrement et sa masse -- c'est ce que D19 avait supprime.
+Ce qu'il apporte : deux axes rotatifs vrais, donc **une course angulaire
+non bornee par une course lineaire**, et une cinematique que Fractal a deja
+ecrite pour Klipper.
+
+**La hauteur du pivot ne change rien au volume.** Deplacer le centre de
+rotation ajoute une translation, et l'encombrement d'un solide est
+invariant par translation. Un cardan sous le plateau change ou la piece se
+trouve, pas la course qu'il faut pour la promener. Il ne compte que pour la
+plongee des bords du plateau. C'est contre-intuitif et ca simplifie la
+conception : placer le cardan la ou la mecanique est commode.
+
+### Chargement des tetes — ou couper, exactement
+
+Un changeur d'outil classique suppose la tete **rigidement liee au chariot
+dans une orientation fixe** : on amene le chariot au dock, on engage un
+accouplement cinematique, on verrouille. Une tete inclinable casse cette
+hypothese. Deux facons de la retablir :
+
+**a) L'axe B fait partie de l'outil echange.** Chaque tete porte son
+moteur de bascule. L'accouplement doit passer sa puissance et ses signaux,
+chaque outil coute un moteur, et la masse echangee explose. Ecarte.
+
+**b) L'axe B reste sur le chariot, seul le hotend s'echange.**
+L'accouplement est porte par la chape basculante. **On commande B a son
+angle de reference, puis on accoste exactement comme sur une 3 axes.** Le
+changeur redevient un probleme resolu -- Prusa XL, E3D, Archer.
+
+La solution est (b), et le probleme qu'elle cree n'est pas mecanique mais
+**metrologique** : la repetabilite de l'axe B entre dans la chaine de
+tolerance de l'offset d'outil. A 60 mm de la pointe, **0,1° d'erreur font
+0,1 mm en XY**. Il faut donc une butee ou un capteur de reference sur B
+avec la meme exigence qu'un capteur d'origine, pas un simple pas perdu.
+
+**Le vrai cout d'une tete inclinable est ailleurs : dans l'enveloppe XY.**
+Une tete de longueur L au-dessus de la pointe, de demi-largeur w, pivotant
+autour de la pointe, deborde lateralement de `L.sin(B) + w.cos(B)` :
+
+| tete | B=0° | B=30° | B=45° | B=60° |
+|---|---|---|---|---|
+| L=70, w=25 | 25 mm | 57 mm | 67 mm | 73 mm |
+| L=90, w=25 | 25 mm | 67 mm | 81 mm | 90 mm |
+| L=70, w=18 | 18 mm | 51 mm | 62 mm | 70 mm |
+
+Une tete courte de 70 mm passe de 25 a 67 mm de debord a 45°. **Il faut
+84 mm de cadre en plus**, 42 de chaque cote, soit 28 % d'un cadre de 300.
+C'est du meme ordre que ce que coute la bascule du plateau, et ca s'y
+ajoute.
+
+### Ce qui en decoule
+
+Le compte d'axes de D19 tient toujours : **si le plateau bascule sur deux
+axes, la tete n'a besoin d'aucun axe rotatif.** Une tete inclinable ET un
+plateau basculant, c'est un degre de liberte de trop (D19 §3), paye deux
+fois -- en enveloppe XY et en repetabilite d'outil.
+
+Le changeur d'outil, lui, ne pose alors **aucun probleme nouveau** : tete
+fixe, accouplement fixe, changeur de 3 axes standard. C'est un argument de
+plus pour mettre toute l'orientation dans le plateau.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,

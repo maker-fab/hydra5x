@@ -3,167 +3,238 @@
 
 Une 5 axes a plateau inclinable **perd du volume** par rapport a la 3 axes
 batie dans le meme cadre. Personne ne chiffre cette perte ; les fiches
-annoncent le volume a inclinaison nulle. Ce fichier la calcule.
+annoncent le volume a inclinaison nulle. Ce fichier la calcule, pour un
+plateau et une piece **ronds ou carres**.
 
 **Pourquoi il y a une perte.** Quand le plateau s'incline de theta, la
-piece bascule avec lui :
+piece bascule avec lui : son point haut monte (course Z), son enveloppe
+s'elargit (course X/Y), le bord du plateau plonge (vide sous le plateau).
 
-- son point haut monte -- il faut de la course Z pour que la buse
-  l'atteigne encore ;
-- son enveloppe s'elargit -- il faut de la course X/Y ;
-- le bord du plateau plonge -- il faut du vide sous le plateau.
+**Modele.** Pivot au centre du plateau, dans son plan. Piece centree. Pour
+un azimut de bascule `phi`, on a besoin de l'etendue de l'empreinte dans
+cette direction -- sa fonction d'appui :
 
-Modele. Pivot dans le PLAN du plateau, en son centre (`--pivot` pour le
-cas general). Piece = cylindre centre, rayon `r`, hauteur `H`. En inclinant
-de theta, le point le plus defavorable est le bord haut oppose au sens de
-bascule :
+    rond,  rayon r      : e(phi) = r                   (isotrope)
+    carre, demi-cote a  : e(phi) = a.(|cos phi| + |sin phi|)   jusqu'a a.V2
 
-    Z_haut = r.sin(theta) + H.cos(theta)      course Z necessaire
-    demi_largeur = r.cos(theta) + H.sin(theta)  course X/Y necessaire / 2
-    plongee = R_plateau.sin(theta)            vide sous le plateau
+C'est **toute la difference entre rond et carre** : le carre presente sa
+diagonale dans les azimuts a 45°, soit 41 % d'etendue en plus, et c'est
+exactement la ou une table a trois points equilaterale est deja la plus
+faible. Les deux anisotropies ne se compensent pas, elles se cumulent.
 
-Avec une table a trois points l'azimut de bascule est quelconque, donc la
-contrainte porte sur **min(course_X, course_Y)**.
+Puis, a l'inclinaison theta :
 
-**Ce que le calcul montre tout de suite** : le terme `H.sin(theta)` est le
-cout dominant. Une piece haute coute beaucoup plus cher en volume qu'une
-piece large. Une machine 5 axes est donc naturellement **plus plate** que
-la 3 axes de meme cadre -- et la contrainte tombe sur le cadre, pas sur la
-cinematique.
+    Z_haut = e(phi).sin(theta) + H.cos(theta)         course Z
+    E      = e(phi).cos(theta) + H.sin(theta)         etendue le long de phi
+    F      = e(phi + 90)                              etendue en travers
+
+et dans le repere machine, demi-course X = E.|cos phi| + F.|sin phi|,
+demi-course Y = E.|sin phi| + F.|cos phi|. On balaye phi et on retient le
+pire.
+
+**Ce que le calcul montre tout de suite** : le terme `H.sin(theta)` domine.
+Une piece haute coute bien plus cher en volume qu'une piece large. Une 5
+axes a plateau inclinable est donc naturellement **plate**.
+
+Le debattement reel de la table, azimut par azimut, vient de
+`table_3points.py`.
 """
 import argparse
 import sys
 
 import numpy as np
 
-
-def faisable(r, h, theta_deg, course_xy, course_z, pivot=0.0):
-    """La piece (r, h) tient-elle dans les courses a cette inclinaison ?"""
-    t = np.radians(theta_deg)
-    haut = max(h - pivot, 0.0)
-    bas = max(pivot, 0.0)
-    z_requis = r * np.sin(t) + haut * np.cos(t) + bas
-    demi = r * np.cos(t) + max(haut, bas) * np.sin(t)
-    return z_requis <= course_z and 2 * demi <= course_xy
+import table_3points as t3
 
 
-def meilleur_cylindre(theta_deg, course_xy, course_z, pivot=0.0, pas=1.0):
-    """Cylindre centre de plus grand volume qui reste faisable a theta."""
-    meilleur = (0.0, 0.0, 0.0)
-    for r in np.arange(pas, course_xy / 2 + pas, pas):
-        for h in np.arange(pas, course_z + pas, pas):
-            if not faisable(r, h, theta_deg, course_xy, course_z, pivot):
-                continue
-            v = np.pi * r * r * h
-            if v > meilleur[2]:
-                meilleur = (float(r), float(h), float(v))
-    return meilleur
+def sommets(forme, taille, h, n=24):
+    """Sommets de l'enveloppe de la piece, repere plateau.
 
-
-def plongee(rayon_plateau, theta_deg):
-    """Vide necessaire sous le plateau, mm."""
-    return rayon_plateau * np.sin(np.radians(theta_deg))
-
-
-def inclinaison_table(rayon_points, course_differentielle):
-    """Inclinaison max d'une table a trois points, degres.
-
-    Trois points a 120 deg sur un cercle de rayon `rayon_points`. En
-    basculant autour d'un axe passant par un point et le milieu des deux
-    autres, le bras de levier vaut 1,5 x rayon. `course_differentielle` est
-    l'ecart de hauteur que les actionneurs peuvent creuser entre eux.
-
-    C'est la borne dure de l'architecture : elle ne depend que de
-    l'encombrement au sol et de la course des vis, jamais de la tete.
+    Le maximum d'une fonction lineaire sur un convexe est atteint sur un
+    sommet : il suffit donc de transformer ceux-la. Un carre en a huit, un
+    cylindre est echantillonne.
     """
-    import math
-    return math.degrees(math.atan2(course_differentielle,
-                                   1.5 * rayon_points))
+    if forme == "carre":
+        base = [(-taille, -taille), (taille, -taille),
+                (taille, taille), (-taille, taille)]
+    else:
+        a = np.linspace(0, 2 * np.pi, n, endpoint=False)
+        base = list(zip(taille * np.cos(a), taille * np.sin(a)))
+    return np.array([(x, y, z) for x, y in base for z in (0.0, h)])
 
 
-def cout_outils(n, largeur_dock, profondeur_dock, course_x, course_y):
-    """Ce que N outils parques retirent aux courses. (course_x, course_y)."""
+def basculer(pts, theta_deg, phi_deg, pivot=0.0):
+    """Bascule de theta dans l'azimut phi, pivot a `pivot` sur l'axe."""
+    t, p = np.radians(theta_deg), np.radians(phi_deg)
+    u, v = np.array([np.cos(p), np.sin(p)]), np.array([-np.sin(p), np.cos(p)])
+    s = pts[:, :2] @ u
+    w = pts[:, :2] @ v
+    z = pts[:, 2] - pivot
+    s2 = s * np.cos(t) + z * np.sin(t)
+    z2 = -s * np.sin(t) + z * np.cos(t) + pivot
+    return np.column_stack([s2 * u[0] + w * v[0], s2 * u[1] + w * v[1], z2])
+
+
+def faisable(forme, taille, h, theta_deg, phi_deg, courses):
+    """La piece tient-elle dans les courses, basculee de theta vers phi ?
+
+    La hauteur du pivot n'intervient pas : deplacer le centre de rotation
+    ajoute une TRANSLATION, et l'encombrement d'un solide est invariant par
+    translation. Le pivot change ou la piece se trouve, pas la course
+    qu'il faut pour la promener. Il ne compte que pour la plongee du
+    plateau sous son plan de depart.
+    """
+    cx, cy, cz = courses
+    q = basculer(sommets(forme, taille, h), theta_deg, phi_deg)
+    eps = 1e-6                      # tolerance : 200,0000001 tient dans 200
+    if q[:, 2].max() - min(q[:, 2].min(), 0.0) > cz + eps:
+        return False
+    return (q[:, 0].ptp() <= cx + eps) and (q[:, 1].ptp() <= cy + eps)
+
+
+def volume(forme, taille, h):
+    return np.pi * taille * taille * h if forme == "rond" else 4 * taille * taille * h
+
+
+def taille_max_sur_plateau(forme_piece, forme_plateau, cote_plateau):
+    """Plus grande piece qui tient a plat sur le plateau (rayon ou demi-cote).
+
+    `cote_plateau` = diametre si rond, cote si carre.
+    """
+    demi = cote_plateau / 2.0
+    if forme_piece == "rond":
+        return demi
+    return demi if forme_plateau == "carre" else demi / np.sqrt(2)
+
+
+def meilleure_piece(forme, taille_max, courses, incl_azimut, pas=2.0):
+    """Plus gros volume faisable dans TOUS les azimuts.
+
+    `incl_azimut` : dict azimut -> inclinaison max a tenir dans cet azimut.
+    """
+    best = (0.0, 0.0, 0.0)
+    for taille in np.arange(pas, taille_max + pas, pas):
+        for h in np.arange(pas, courses[2] + pas, pas):
+            v = volume(forme, taille, h)
+            if v <= best[2]:
+                continue
+            if all(faisable(forme, taille, h, th, phi, courses)
+                   for phi, th in incl_azimut.items()):
+                best = (float(taille), float(h), float(v))
+    return best
+
+
+def plongee(forme_plateau, cote_plateau, theta_deg, phi_deg=45.0, pivot=0.0):
+    """Vide necessaire sous le plateau dans cet azimut, mm.
+
+    Seul endroit ou la hauteur du pivot compte : un cardan place SOUS le
+    plateau fait plonger ses bords d'autant plus bas.
+    """
+    demi = cote_plateau / 2.0
+    q = basculer(sommets(forme_plateau, demi, 0.0), theta_deg, phi_deg, pivot)
+    return float(-q[:, 2].min())
+
+
+def cout_outils(n, largeur_dock, profondeur_dock, cx, cy):
+    """Ce que N outils parques retirent aux courses."""
     if n <= 1:
-        return course_x, course_y
-    if n * largeur_dock > course_x:
+        return cx, cy
+    if n * largeur_dock > cx:
         raise ValueError(f"{n} docks de {largeur_dock} mm ne tiennent pas "
-                         f"dans {course_x} mm de course X")
-    return course_x, course_y - profondeur_dock
+                         f"dans {cx} mm de course X")
+    return cx, cy - profondeur_dock
 
 
-CADRES = {
-    # nom : (course_X, course_Y, course_Z, diametre utile du plateau)
-    "Voron Trident 300": (300, 300, 250, 300),
-    "Voron Trident 350": (350, 350, 250, 350),
-    "Voron 2.4 350": (350, 350, 310, 350),
-    "Fractal 5 Pro": (200, 200, 200, 324),
-    "Archer Demonstrator": (300, 300, 350, 300),
-}
+def profil_inclinaison(args, pas=15.0):
+    """azimut -> inclinaison max, selon le mecanisme de bascule."""
+    azimuts = np.arange(0.0, 180.0, pas)
+    if args.bascule == "cardan":
+        brut = t3.inclinaison_cardan(args.axes[0], args.axes[1], azimuts)
+        return {a: min(args.inclinaison, v) for a, v in brut.items()}
+    if args.bascule == "3points":
+        pts = t3.mise_a_echelle(t3.DISPOSITIONS[args.appuis], args.plateau / 2)
+        return {float(a): min(args.inclinaison,
+                              t3.inclinaison(pts, args.course_diff, a))
+                for a in azimuts}
+    return {float(a): args.inclinaison for a in azimuts}
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--cadre", choices=sorted(CADRES), default=None)
-    ap.add_argument("--course", type=float, nargs=3, metavar=("X", "Y", "Z"))
-    ap.add_argument("--plateau", type=float, help="diametre utile, mm")
-    ap.add_argument("--inclinaison", type=float, default=45.0,
-                    help="inclinaison max de la table, degres")
+    ap.add_argument("--course", type=float, nargs=3, required=True,
+                    metavar=("X", "Y", "Z"))
+    ap.add_argument("--plateau", type=float, required=True,
+                    help="cote si carre, diametre si rond, mm")
+    ap.add_argument("--forme-plateau", choices=("rond", "carre"), default="carre")
+    ap.add_argument("--forme-piece", choices=("rond", "carre"), default="carre")
+    ap.add_argument("--inclinaison", type=float, default=45.0)
+    ap.add_argument("--bascule", choices=("plat", "3points", "cardan"),
+                    default="plat",
+                    help="mecanisme : inclinaison uniforme, table a trois "
+                         "points, ou cardan a deux axes")
+    ap.add_argument("--axes", type=float, nargs=2, default=(45.0, 45.0),
+                    metavar=("ALPHA", "BETA"),
+                    help="courses des deux axes du cardan, degres")
+    ap.add_argument("--appuis", choices=sorted(t3.DISPOSITIONS),
+                    default="equilateral",
+                    help="disposition des trois appuis")
+    ap.add_argument("--course-diff", type=float, default=150.0,
+                    help="course differentielle des trois actionneurs, mm")
     ap.add_argument("--pivot", type=float, default=0.0,
-                    help="hauteur du pivot au-dessus du plateau, mm")
+                    help="hauteur du centre de bascule par rapport au plan "
+                         "du plateau (negatif = cardan dessous). N'agit que "
+                         "sur la plongee")
     ap.add_argument("--outils", type=int, default=1)
     ap.add_argument("--dock", type=float, nargs=2, default=(55.0, 60.0),
-                    metavar=("LARGEUR", "PROFONDEUR"),
-                    help="encombrement d'un dock d'outil, mm")
-    ap.add_argument("--pas", type=float, default=2.0,
-                    help="pas de balayage r/H, mm")
+                    metavar=("LARGEUR", "PROFONDEUR"))
+    ap.add_argument("--pas", type=float, default=2.0)
     args = ap.parse_args()
 
-    if args.cadre:
-        cx, cy, cz, plateau = CADRES[args.cadre]
-        nom = args.cadre
-    elif args.course and args.plateau:
-        cx, cy, cz = args.course
-        plateau = args.plateau
-        nom = "cadre fourni"
-    else:
-        ap.error("donner --cadre, ou --course X Y Z avec --plateau")
-
+    cx, cy, cz = args.course
     cx, cy = cout_outils(args.outils, args.dock[0], args.dock[1], cx, cy)
-    # le plateau borne le rayon au meme titre que les courses : une piece
-    # plus large que lui ne tient nulle part
-    course_xy = min(cx, cy, plateau)
+    taille_max = taille_max_sur_plateau(args.forme_piece, args.forme_plateau,
+                                        args.plateau)
+    courses = (cx, cy, cz)
 
-    print(f"=== {nom} ===")
-    print(f"  courses apres {args.outils} outil(s) : "
-          f"X{cx:.0f} Y{cy:.0f} Z{cz:.0f}, plateau Ø{plateau:.0f}")
-    if args.outils > 1:
-        print(f"  ({args.outils} docks de {args.dock[0]:.0f} mm : "
-              f"{args.outils*args.dock[0]:.0f} mm occupes en X, "
-              f"-{args.dock[1]:.0f} mm en Y)")
+    print(f"=== plateau {args.forme_plateau} {args.plateau:.0f} mm, "
+          f"piece {args.forme_piece} ===")
+    print(f"  courses X{cx:.0f} Y{cy:.0f} Z{cz:.0f}"
+          + (f"  ({args.outils} outils)" if args.outils > 1 else ""))
+    if args.bascule == "3points":
+        pts = t3.mise_a_echelle(t3.DISPOSITIONS[args.appuis], args.plateau / 2)
+        pire, az = t3.pire_cas(pts, args.course_diff)
+        print(f"  appuis « {args.appuis} », course differentielle "
+              f"{args.course_diff:.0f} mm : {pire:.1f}° garantis "
+              f"(azimut {az:.0f}°)")
+    elif args.bascule == "cardan":
+        pr = profil_inclinaison(args)
+        print(f"  cardan {args.axes[0]:.0f}°+{args.axes[1]:.0f}° : "
+              f"{min(pr.values()):.1f}° garantis, {max(pr.values()):.1f}° "
+              f"en diagonale")
+    if args.pivot:
+        print(f"  pivot a {args.pivot:+.0f} mm du plan du plateau")
 
-    r0, h0, v0 = meilleur_cylindre(0.0, course_xy, cz, args.pivot, args.pas)
-    print(f"\n  {'incl.':>6s} {'rayon':>7s} {'hauteur':>8s} "
-          f"{'volume':>9s} {'perte':>7s} {'vide sous plateau':>19s}")
-    for theta in (0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60):
-        if theta > args.inclinaison:
+    profil = profil_inclinaison(args)
+    plat = {a: 0.0 for a in profil}
+    _, h0, v0 = meilleure_piece(args.forme_piece, taille_max, courses,
+                                plat, args.pas)
+
+    print(f"\n  {'incl.':>6s} {'empreinte':>11s} {'hauteur':>8s} "
+          f"{'volume':>9s} {'perte':>7s} {'vide dessous':>13s}")
+    for theta in (0, 10, 15, 20, 25, 30, 35, 40, 45):
+        p = {a: min(theta, profil[a]) for a in profil}
+        if theta > max(profil.values()):
             break
-        r, h, v = meilleur_cylindre(theta, course_xy, cz, args.pivot, args.pas)
+        taille, h, v = meilleure_piece(args.forme_piece, taille_max, courses,
+                                       p, args.pas)
+        emp = (f"Ø{2*taille:.0f}" if args.forme_piece == "rond"
+               else f"{2*taille:.0f}x{2*taille:.0f}")
         perte = 100.0 * (1 - v / v0) if v0 else 0.0
-        print(f"  {theta:5.0f}° {r:6.0f} {h:7.0f} "
-              f"{v/1e6:8.2f} L {perte:6.1f}% {plongee(plateau/2, theta):15.0f} mm")
-
-    r, h, v = meilleur_cylindre(args.inclinaison, course_xy, cz,
-                                args.pivot, args.pas)
-    print(f"\n  A {args.inclinaison:.0f}° : cylindre Ø{2*r:.0f} x {h:.0f} mm, "
-          f"{v/1e6:.2f} L")
-    print(f"  Course Z consommee par la bascule seule : "
-          f"{r*np.sin(np.radians(args.inclinaison)):.0f} mm")
-    print(f"  Vide a prevoir sous le plateau : "
-          f"{plongee(plateau/2, args.inclinaison):.0f} mm")
+        print(f"  {theta:5.0f}° {emp:>11s} {h:7.0f} {v/1e6:8.2f} L "
+              f"{perte:6.1f}% {plongee(args.forme_plateau, args.plateau, min(theta, max(profil.values())), 45.0, args.pivot):9.0f} mm")
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
-
