@@ -62,6 +62,66 @@ MATERIAUX = {
 }
 
 
+# --- viscosite dependante de la temperature -------------------------------
+#
+# Le premier modele figeait la viscosite et se donnait un « temps fondu ».
+# Question posee : **et le plateau chauffant ?** Il maintient le cordon
+# chaud bien plus longtemps qu'une seconde, surtout dans les couches
+# basses et en caisson ferme.
+#
+# La reponse tient dans une competition : le temps disponible grandit,
+# mais la viscosite grandit **beaucoup plus vite** en refroidissant. On ne
+# peut pas trancher sans integrer les deux.
+#
+# Loi WLF, referencee sur la temperature de depot plutot que sur Tg -- les
+# constantes universelles referencees Tg sont mauvaises a plus de 100 K
+# au-dessus. Conversion standard :
+#
+#     C2' = C2 + T_depot - Tg        C1' = C1 . C2 / C2'
+WLF_C1, WLF_C2 = 17.44, 51.6         # constantes universelles, reference Tg
+
+
+def viscosite(mu_depot, t_depot, tg, temperature):
+    """Viscosite a une temperature donnee, Pa.s, par WLF.
+
+    Sous Tg le polymere est vitreux : on plafonne, la valeur exacte n'a
+    plus d'importance puisque plus rien ne coule.
+    """
+    temperature = np.asarray(temperature, dtype=float)
+    c2 = WLF_C2 + t_depot - tg
+    c1 = WLF_C1 * WLF_C2 / c2
+    dt = np.maximum(temperature, tg) - t_depot
+    log_a = -c1 * dt / (c2 + dt)
+    return mu_depot * np.power(10.0, log_a)
+
+
+def refroidissement(t_depot, t_fond, tau, temps):
+    """Decroissance exponentielle vers la temperature du support.
+
+    `t_fond` est ce vers quoi le cordon tend : le plateau chauffant pour
+    les premieres couches, la temperature du caisson plus haut. C'est
+    exactement le parametre que la question portait.
+    """
+    return t_fond + (t_depot - t_fond) * np.exp(-np.asarray(temps) / tau)
+
+
+def derive_thermique(rho, mu_depot, h, theta_deg, t_depot, tg, t_fond,
+                     tau, duree=3600.0, pas=1e-4):
+    """Derive cumulee en integrant le refroidissement. Retourne (t, derive).
+
+    On integre `u(t) = rho.g.sin(theta).h^2 / (3.mu(T(t)))` sur une heure.
+    Le pas est fin au debut -- c'est la que tout se joue -- puis
+    geometrique, parce qu'au-dela d'une seconde il ne se passe plus rien.
+    """
+    temps = np.unique(np.concatenate([
+        np.arange(0.0, 1.0, pas),
+        np.geomspace(1.0, duree, 2000)]))
+    mu = viscosite(mu_depot, t_depot, tg,
+                   refroidissement(t_depot, t_fond, tau, temps))
+    u = rho * G * np.sin(np.radians(theta_deg)) * h ** 2 / (3.0 * mu)
+    return temps, np.concatenate([[0.0], np.cumsum(np.diff(temps) * u[:-1])])
+
+
 def bond(rho, sigma, h, theta_deg):
     """Gravite / tension superficielle. Sous 1, la capillarite tient."""
     return rho * G * h ** 2 * np.sin(np.radians(theta_deg)) / sigma
@@ -94,6 +154,36 @@ def balayage(mat, h, t_fige, angles):
     return lignes
 
 
+def piece_sur_plateau_incline(masse_kg, base_mm, hauteur_mm, theta_deg,
+                              adherence_mpa=0.5):
+    """La piece tient-elle sur un PLATEAU BASCULANT, chaude et penchee ?
+
+    Ne concerne que la famille « plateau bascule » : ailleurs la piece
+    reste a plat et n'est chargee que par son propre poids, comme en 3
+    axes. Le plateau chauffant entre ici deux fois -- il ramollit la piece
+    ET il maintient l'interface chaude.
+
+    Deux modes, tres differents :
+
+    - **cisaillement** a l'interface : `m.g.sin(theta) / aire` ;
+    - **pelage** : le centre de gravite part de cote, d'ou un moment qui
+      arrache le bord amont. C'est le mode qui gouverne sur une piece
+      haute, et celui qu'on oublie.
+    """
+    aire = base_mm ** 2
+    force = masse_kg * G * np.sin(np.radians(theta_deg))
+    cisaillement = force / (aire * 1e-6) / 1e6            # MPa
+    moment = force * (hauteur_mm / 2.0) * 1e-3            # N.m
+    module = base_mm ** 3 / 6.0                           # mm3, section carree
+    pelage = (moment * 1e3) / module                      # MPa
+    return {
+        "cisaillement": cisaillement,
+        "pelage": pelage,
+        "marge_cisaillement": adherence_mpa / max(cisaillement, 1e-12),
+        "marge_pelage": adherence_mpa / max(pelage, 1e-12),
+    }
+
+
 def sensibilite(mat, h, angle, t_fige):
     """Balaye viscosite et temps de figeage sur quatre decades.
 
@@ -122,6 +212,12 @@ def main():
                     help="hauteur de couche, mm")
     ap.add_argument("--fige", type=float, default=1.0,
                     help="temps pendant lequel le cordon reste fondu, s")
+    ap.add_argument("--plateau", type=float, default=60.0,
+                    help="temperature du plateau ou du caisson, °C")
+    ap.add_argument("--tg", type=float, default=None,
+                    help="transition vitreuse, °C (defaut : selon materiau)")
+    ap.add_argument("--tau", type=float, default=0.5,
+                    help="constante de refroidissement du cordon, s")
     args = ap.parse_args()
 
     h = args.couche / 1000.0
@@ -146,6 +242,24 @@ def main():
         print(f"  {mu_:10.0f}" + "".join(f"{r:12.2e}" for r in ligne))
     print("\n  Un polymere fondu se situe entre 100 et 10 000 Pa.s ;")
     print("  1 Pa.s serait de l'eau tiede, il n'est la que comme borne absurde.")
+
+    tg = args.tg if args.tg is not None else {"PLA": 60.0, "ABS": 105.0,
+                                             "PETG": 85.0, "TPU": 60.0}[args.materiau]
+    print(f"\n  Avec le plateau chauffant pris en compte "
+          f"(support a {args.plateau:.0f} °C, Tg {tg:.0f} °C, "
+          f"refroidissement tau={args.tau:.1f} s) :\n")
+    print(f"  {'incl.':>6s} {'a 1 s':>12s} {'a 1 min':>12s} {'a 1 h':>12s} "
+          f"{'% de couche':>12s}")
+    for theta in (15, 30, 45, 60, 90):
+        temps, d = derive_thermique(rho, mu, h, theta, t_dep, tg,
+                                    args.plateau, args.tau)
+        i1 = int(np.searchsorted(temps, 1.0))
+        i60 = int(np.searchsorted(temps, 60.0))
+        print(f"  {theta:5.0f}° {d[i1]*1e6:9.4f} um {d[i60]*1e6:9.4f} um "
+              f"{d[-1]*1e6:9.4f} um {100*d[-1]/h:11.4f} %")
+    print("\n  Le plateau allonge le temps disponible, mais la viscosite")
+    print("  monte de cinq decades en refroidissant : l'integrale converge")
+    print("  avant la premiere seconde. Chauffer ne change pas le verdict.")
 
     # hauteur de couche a laquelle le probleme apparaitrait vraiment
     cible = 1.0                       # Bond = 1

@@ -1868,6 +1868,63 @@ Un polymere fondu est de plus **rheofluidifiant** : au repos, a faible
 cisaillement, sa viscosite est la PLUS HAUTE. Prendre une viscosite
 newtonienne est donc conservateur dans le bon sens.
 
+### Et le plateau chauffant ?
+
+Objection juste : le premier modele se donnait un « temps fondu » fixe
+d'une seconde. Un plateau chauffant maintient le cordon chaud bien plus
+longtemps, surtout dans les couches basses et en caisson ferme.
+
+Le modele a donc ete refait proprement : **refroidissement exponentiel
+vers la temperature du support, et viscosite dependante de la temperature
+par la loi WLF**, integres sur une heure.
+
+Le resultat est plus fort, pas plus faible :
+
+| inclinaison | derive a 1 s | a 1 min | a 1 h | en part de couche |
+|---|---|---|---|---|
+| 30° | 0,0096 µm | 0,0096 µm | 0,0096 µm | 0,005 % |
+| **45°** | **0,0136 µm** | 0,0136 µm | **0,0136 µm** | **0,007 %** |
+| 90° | 0,0192 µm | 0,0192 µm | 0,0192 µm | 0,010 % |
+
+PLA, plateau a 60 °C. **L'integrale converge avant la premiere seconde**,
+et une heure ne change rien.
+
+La raison : le temps disponible grandit, mais **la viscosite grandit
+beaucoup plus vite**. Entre 205 et 100 °C elle monte de **cinq decades**.
+Tout ce qui pouvait couler a coule dans les premiers dixiemes de seconde,
+quand le cordon etait encore chaud -- et ca faisait 0,01 micron.
+
+Balayage du support de 25 a 110 °C et de la constante de refroidissement :
+la derive va de 0,001 a 0,064 µm. Le seul cas qui continue de fluer est le
+PLA sur un support a 110 °C, donc **au-dessus de son Tg** : il ne fige
+jamais tout a fait. Ca lui fait 0,064 µm en une heure, soit 0,03 % d'une
+couche.
+
+Le modele a viscosite figee etait donc **cent fois trop pessimiste**, parce
+qu'il appliquait la viscosite du fondu pendant toute la seconde.
+
+### Et la piece chaude sur un plateau qui penche ?
+
+L'autre effet du chauffage, et il ne concerne **que la famille « plateau
+bascule »** : ailleurs la piece reste a plat et n'est chargee que par son
+poids, comme en 3 axes.
+
+| piece | 35° | cisaillement | pelage | marge au pelage |
+|---|---|---|---|---|
+| colonne 100x100x200, 620 g | | 0,35 kPa | 2,1 kPa | **x239** |
+| bloc 150x150x250, 2 kg | | 0,50 kPa | 2,5 kPa | **x200** |
+| mat 60x60x300, 300 g | | 0,47 kPa | 7,0 kPa | **x71** |
+
+Le mode qui gouverne est le **pelage**, pas le cisaillement : le centre de
+gravite part de cote et arrache le bord amont. C'est celui qu'on oublie,
+et c'est lui qui punit les pieces hautes et etroites.
+
+Meme la, la marge est de **58 a 324 fois** contre une adherence de
+0,5 MPa. **Le decollement statique n'est pas un risque.** Ce qui peut
+decoller une piece sur un plateau basculant, c'est l'**acceleration**
+pendant le mouvement, pas la gravite -- et ca renvoie encore a l'inertie,
+donc au meme classement.
+
 ### Ce que la simulation ne dit pas
 
 - Les **ponts et surplombs sans substrat** : la, le cordon pend
