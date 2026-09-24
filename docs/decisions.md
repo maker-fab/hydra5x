@@ -26,7 +26,7 @@ mieux, ce sera un bonus.
 
 ---
 
-## D2 — Cinématique TRT, base Fractal 5 Pro  ⟨ROUVERTE, voir D15⟩
+## D2 — Cinématique TRT, base Fractal 5 Pro  ⟨REFERMÉE par D23 : table basculante retenue, mécanisme rouvert⟩
 
 Plateau assurant rotation (A) et basculement (B), tête fixe en XYZ.
 
@@ -1304,6 +1304,109 @@ dire si le cordon ne tient pas sur une couche fortement inclinee.
 **Donc l'essai de depot incline (D21) ne decide pas d'un reglage : il
 decide s'il faut construire une machine ou deux mecanismes.** C'est le
 prochain jalon, et il est physique, pas logiciel.
+
+---
+
+## D23 — Table inclinable retenue. Reste a choisir le mecanisme
+
+Decision prise : **c'est le plateau qui s'oriente, pas la tete.** D2 est
+refermee sur ce point, apres avoir ete rouverte par D15.
+
+### Ce que ca retient, et ce que ca accepte
+
+Retenu, mesure ou etabli :
+
+- la gravite presse le cordon a toute inclinaison : le plan de depot reste
+  horizontal (D16). **C'est le seul cout de la tete inclinable qui n'etait
+  pas chiffrable, et il est ecarte d'office ;**
+- la tete reste simple, legere, sans articulation traversee par le filament ;
+- le changeur d'outil ne pose **aucun probleme nouveau** (D20) ;
+- toute la chaine logicielle du depot parle deja cette machine : le fork
+  Cortex, `stitch_chunks.py` verifie chiffre par chiffre sur le protocole
+  Fractal, `check_collision.py`, la cinematique de reference.
+
+Accepte, chiffre :
+
+- **cadre plus haut** : +70 % de hauteur pour la meme piece (D21) ;
+- volume garanti reduit, et la reduction croit avec la taille de la piece ;
+- les re-entrants au-dela de 90° restent hors de portee : la piece serait
+  retournee, il faudrait un bridage (D16). **L'argument du support
+  irretirable de D13 sort du perimetre de la premiere machine.**
+
+Une piece **cylindrique** coute nettement moins cher qu'un cube : a 45°,
+283 mm de cadre au lieu de 341 en Z. La diagonale du cube est ce qui se
+paie.
+
+### Le choix qui reste : berceau ou trois points
+
+| | berceau a deux axes | table a trois points |
+|---|---|---|
+| course angulaire | non bornee | **~35-40°**, bornee par la course lineaire |
+| pieces usinees | 13 des 21 de la Fractal | aucune, trois vis et trois rotules |
+| garde plateau-buse 12 mm | **oui**, contrainte structurante | **sans objet** |
+| alimentation du plateau chauffant | bague tournante | cable souple, ne tourne pas |
+| moteurs | X, Y, Z, A, B = 5 | X, Y, Z1, Z2, Z3 = 5 |
+| firmware | **existe** (Fractal, Klipper, GPL) | **n'existe nulle part** |
+| materiel de base | CAO Fractal | Voron Trident, produit en masse |
+| cout | 2 600-2 900 $ chiffres | cadre CoreXY ordinaire |
+
+**Le choix revient a decider ou placer l'inconnu.** Le berceau met le
+risque dans la mecanique -- 21 pieces usinees, 150 a 370 € de decoupe, un
+arbre tourne -- et rien dans le logiciel. Les trois points font l'inverse :
+mecanique banale et bon marche, **zero ligne de firmware existante**.
+
+### Recommandation : les trois points
+
+Quatre raisons, dans l'ordre :
+
+1. **35-40° suffisent au perimetre retenu.** D16 a etabli que 0-50°
+   couvrent tous les surplombs sans exception, et les re-entrants sortent
+   de toute facon du perimetre d'une table basculante. La borne des trois
+   points ne mord pas sur ce qu'on a decide de faire.
+
+2. **Ca supprime la garde de 12 mm**, qui a fausse ou complique toutes les
+   mesures d'enveloppe de ce depot.
+
+3. **Le risque va la ou le projet est fort.** Ce depot produit du logiciel
+   -- une douzaine d'outils, un fork maintenu, une cinematique corrigee en
+   amont. Il n'a pas d'atelier. Concentrer l'inconnu dans du code est un
+   choix de prudence, pas d'ambition.
+
+4. Le materiel de base **existe, est produit en masse et coute peu** :
+   Voron Trident est deja un CoreXY a trois moteurs Z independants sous le
+   plateau. Manquent trois rotules, la course, et la cinematique.
+
+Ce que ca coute cote logiciel : la sortie de `stitch_chunks.py` vise
+aujourd'hui des angles A/B. Il faudra la faire viser trois hauteurs. C'est
+une **transformation de sortie, contenue** -- le decoupage en blocs et la
+couture ne changent pas.
+
+### Dimensionnement propose
+
+Pour une piece cible de **Ø200 x 200 mm** a **35°** :
+
+| | valeur |
+|---|---|
+| plateau | carre 250 mm |
+| portee des appuis (pire azimut) | 217 mm |
+| **course differentielle des trois vis** | **152 mm** |
+| courses X / Y | 279 mm |
+| course Z | 279 mm + la course differentielle |
+| vide sous le plateau | ~101 mm (diagonale du plateau a 35°) |
+
+Le plateau est plus grand que la piece de 25 mm au pourtour, pour la bride
+et la premiere couche.
+
+### Ce qu'il faut faire ensuite, dans l'ordre
+
+1. **Ecrire la cinematique directe et inverse des trois points** -- un plan
+   par trois points, quelques lignes, plus les butees et les singularites.
+   A valider hors machine, contre `check_collision.py`.
+2. **Etendre `stitch_chunks.py`** pour emettre trois hauteurs au lieu de
+   A/B, en gardant l'ancien chemin pour la comparaison.
+3. **Essai de depot incline** -- il ne conditionne plus l'architecture,
+   mais il borne l'angle utile.
+4. Seulement apres : la mecanique.
 
 ---
 
