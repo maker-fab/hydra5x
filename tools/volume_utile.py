@@ -135,6 +135,39 @@ def plongee(forme_plateau, cote_plateau, theta_deg, phi_deg=45.0, pivot=0.0):
     return float(-q[:, 2].min())
 
 
+def debord_tete(longueur, demi_largeur, b_deg):
+    """Debord lateral d'une tete inclinee de B autour de la pointe, mm.
+
+    La tete pivote autour de la pointe de buse. Son coin le plus exterieur
+    est a `longueur` au-dessus et `demi_largeur` de cote :
+
+        debord(B) = longueur.sin(B) + demi_largeur.cos(B)
+
+    A B = 0 il vaut la demi-largeur : c'est l'encombrement qu'une tete
+    fixe coute deja. Seule la DIFFERENCE se paie en bascule.
+    """
+    r = np.radians(b_deg)
+    return longueur * np.sin(r) + demi_largeur * np.cos(r)
+
+
+def courses_tete_inclinable(courses, longueur, demi_largeur, b_deg):
+    """Courses restantes quand c'est la TETE qui s'incline.
+
+    La piece ne bouge pas : elle ne balaie rien, elle ne se decolle pas,
+    et elle ne coute donc **aucune** course. Ce qui coute, c'est le corps
+    de la tete qui se couche vers le bati.
+
+    Difference de nature avec un plateau basculant : ici le cout est
+    borne par la TAILLE DE LA TETE, la-bas il croit avec la taille de la
+    PIECE. C'est la seule asymetrie structurelle entre les deux
+    architectures.
+    """
+    cx, cy, cz = courses
+    perte = 2 * (debord_tete(longueur, demi_largeur, b_deg)
+                 - debord_tete(longueur, demi_largeur, 0.0))
+    return max(cx - perte, 0.0), max(cy - perte, 0.0), cz
+
+
 def cout_outils(n, largeur_dock, profondeur_dock, cx, cy):
     """Ce que N outils parques retirent aux courses."""
     if n <= 1:
@@ -169,10 +202,10 @@ def main():
     ap.add_argument("--forme-plateau", choices=("rond", "carre"), default="carre")
     ap.add_argument("--forme-piece", choices=("rond", "carre"), default="carre")
     ap.add_argument("--inclinaison", type=float, default=45.0)
-    ap.add_argument("--bascule", choices=("plat", "3points", "cardan"),
+    ap.add_argument("--bascule", choices=("plat", "3points", "cardan", "tete"),
                     default="plat",
-                    help="mecanisme : inclinaison uniforme, table a trois "
-                         "points, ou cardan a deux axes")
+                    help="qui s'incline : personne (plat), le plateau "
+                         "(3points, cardan), ou la tete")
     ap.add_argument("--axes", type=float, nargs=2, default=(45.0, 45.0),
                     metavar=("ALPHA", "BETA"),
                     help="courses des deux axes du cardan, degres")
@@ -185,6 +218,9 @@ def main():
                     help="hauteur du centre de bascule par rapport au plan "
                          "du plateau (negatif = cardan dessous). N'agit que "
                          "sur la plongee")
+    ap.add_argument("--tete", type=float, nargs=2, default=(70.0, 25.0),
+                    metavar=("LONGUEUR", "DEMI_LARGEUR"),
+                    help="encombrement de la tete au-dessus de la pointe, mm")
     ap.add_argument("--outils", type=int, default=1)
     ap.add_argument("--dock", type=float, nargs=2, default=(55.0, 60.0),
                     metavar=("LARGEUR", "PROFONDEUR"))
@@ -215,6 +251,10 @@ def main():
     if args.pivot:
         print(f"  pivot a {args.pivot:+.0f} mm du plan du plateau")
 
+    if args.bascule == "tete":
+        print(f"  tete L{args.tete[0]:.0f} w{args.tete[1]:.0f} : "
+              f"la piece ne bouge pas, seul le corps de la tete se couche")
+
     profil = profil_inclinaison(args)
     plat = {a: 0.0 for a in profil}
     _, h0, v0 = meilleure_piece(args.forme_piece, taille_max, courses,
@@ -222,17 +262,26 @@ def main():
 
     print(f"\n  {'incl.':>6s} {'empreinte':>11s} {'hauteur':>8s} "
           f"{'volume':>9s} {'perte':>7s} {'vide dessous':>13s}")
-    for theta in (0, 10, 15, 20, 25, 30, 35, 40, 45):
-        p = {a: min(theta, profil[a]) for a in profil}
+    for theta in (0, 10, 15, 20, 25, 30, 35, 40, 45, 60, 90):
         if theta > max(profil.values()):
             break
-        taille, h, v = meilleure_piece(args.forme_piece, taille_max, courses,
+        if args.bascule == "tete":
+            # la piece reste a plat ; c'est le cadre qui se retrecit
+            p = {a: 0.0 for a in profil}
+            c = courses_tete_inclinable(courses, args.tete[0], args.tete[1],
+                                        theta)
+        else:
+            p = {a: min(theta, profil[a]) for a in profil}
+            c = courses
+        taille, h, v = meilleure_piece(args.forme_piece, taille_max, c,
                                        p, args.pas)
         emp = (f"Ø{2*taille:.0f}" if args.forme_piece == "rond"
                else f"{2*taille:.0f}x{2*taille:.0f}")
         perte = 100.0 * (1 - v / v0) if v0 else 0.0
         print(f"  {theta:5.0f}° {emp:>11s} {h:7.0f} {v/1e6:8.2f} L "
-              f"{perte:6.1f}% {plongee(args.forme_plateau, args.plateau, min(theta, max(profil.values())), 45.0, args.pivot):9.0f} mm")
+              f"{perte:6.1f}% "
+              + ("        0 mm" if args.bascule == "tete" else
+                 f"{plongee(args.forme_plateau, args.plateau, min(theta, max(profil.values())), 45.0, args.pivot):9.0f} mm"))
     return 0
 
 

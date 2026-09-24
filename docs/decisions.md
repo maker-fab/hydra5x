@@ -1114,6 +1114,107 @@ plus pour mettre toute l'orientation dans le plateau.
 
 ---
 
+## D21 — Ce que la tete inclinable achete vraiment
+
+D19 et D20 ont empile les couts de la tete inclinable. Question retournee :
+**quel est son avantage ?** Il y en a un, et il est plus gros que tous les
+couts listes.
+
+### Le cout de la bascule change de nature
+
+| | ce qui balaie l'enveloppe | le cout croit avec |
+|---|---|---|
+| plateau basculant | **la piece entiere** | la taille de la PIECE |
+| tete inclinable | **le corps de la tete** | la taille de la TETE |
+
+C'est la seule asymetrie structurelle entre les deux architectures, et
+elle est decisive : une tete fait 70 mm de long, une piece peut en faire
+250. Le cout de la tete est **borne et connu a la conception** ; celui du
+plateau croit avec ce qu'on imprime.
+
+### Le chiffre
+
+Meme cadre X300 Y300 Z250, plateau carre 300, piece carree, `volume_utile.py` :
+
+| inclinaison | plateau basculant | tete inclinable (L=70, w=25) |
+|---|---|---|
+| 0° | 22,50 L | 22,50 L |
+| 15° | 11,01 L | **17,42 L** |
+| 30° | 5,30 L | **13,92 L** |
+| 45° | 3,25 L (−85,5 %) | **11,24 L (−50,1 %)** |
+| 60° | hors de portee | 10,00 L |
+| 90° | exige un bridage mecanique | **10,82 L** |
+
+**3,5 fois plus de volume a 45°.** Et la hauteur reste entiere : 250 mm a
+toute inclinaison, contre 110 mm pour le plateau basculant, qui doit
+coucher la piece pour la faire passer sous le portique.
+
+### Les quatre autres avantages, dans l'ordre
+
+1. **La piece ne se decolle jamais.** D16 concluait qu'au-dela de 90° « la
+   piece est retournee, l'adherence ne la tient plus, il faut un bridage
+   mecanique -- une autre classe de machine ». Avec une tete inclinable,
+   **ca disparait** : la piece reste a plat quoi qu'il arrive. Le seul
+   argument binaire du projet -- le support irretirable de D13, qui est un
+   re-entrant, qui exige plus de 90° -- redevient atteignable sans changer
+   de classe de machine.
+
+2. **La masse en mouvement ne croit pas avec l'impression.** Un plateau qui
+   bascule porte la piece : ses accelerations admissibles baissent a mesure
+   que la piece grossit. Une machine qui ralentit en cours de travail. La
+   tete pese ce qu'elle pese, du debut a la fin.
+
+3. **Le plateau reste un plateau.** Pas de cardan, pas de trois rotules,
+   pas de bague tournante, et surtout **pas de 300 a 750 W de chauffage ni
+   de thermistance a faire passer par une articulation mobile**. C'est la
+   liaison la plus penible de la machine ; la supprimer vaut mieux que la
+   reussir.
+
+4. **Le firmware existe deja**, partiellement : le Core R-Theta fait
+   tourner une tete inclinable de −180° a +90° sous RepRapFirmware.
+
+### Ce que ca n'achete PAS — a ne pas se raconter
+
+**Aucune garde buse-piece.** La collision ne depend que de la pose
+*relative* buse/piece. A inclinaison egale, incliner la tete ou incliner le
+plateau donne exactement la meme interference. C'est deja etabli et ca vaut
+ici aussi -- c'est la meme erreur que la redondance avait failli faire
+commettre.
+
+**La gravite reste le vrai prix.** Le plateau basculant garde le plan de
+depot horizontal et presse le cordon a toute inclinaison (D16) ; la tete
+inclinable depose sur un plan incline, et a 45° la gravite tire le cordon
+avec 71 % de son poids dans le plan de la couche. **Ce cout n'est toujours
+pas mesure.** Deux choses le nuancent sans le supprimer :
+
+- le cordon est **repasse et plaque par le meplat de la buse**, il n'est pas
+  simplement pose ; la gravite n'est pas seule en jeu ;
+- en non-planaire continu (D17) la surface locale est de toute facon
+  inclinee dans le repere machine, regime que le non-planaire 3 axes
+  pratique deja sans drame.
+
+C'est le seul point ou le plateau basculant garde un avantage franc. Il
+vaut un essai reel, pas un arbitrage sur le papier.
+
+### Ou ca laisse l'architecture
+
+L'orientation demande deux degres. S'ils viennent tous les deux de la tete
+(A+B dans la broche), on est en tete-tete : masse et encombrement
+cumules. S'ils viennent tous les deux du plateau (D19), on paie 85 % du
+volume.
+
+**La combinaison qui tient debout : plateau qui TOURNE a plat (C), tete qui
+S'INCLINE (B).** Le plateau ne bascule jamais -- pas de decollement, pas de
+berceau, pas de perte de volume par balayage -- et la bague tournante est
+un probleme resolu. La tete ne porte qu'un axe. C'est le Core R-Theta avec
+un axe Y en plus, et c'est ce que `architecture-v2.md` proposait avant que
+D19 ne parte sur le tout-plateau.
+
+Reste a trancher par l'essai, pas par le calcul : **le cordon tient-il sur
+une couche inclinee a 45° ?**
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
