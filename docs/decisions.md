@@ -855,6 +855,141 @@ mais pas pour toute orientation.
 
 ---
 
+## D19 — La base de construction, reprise a zero sur quatre points
+
+Base demandee : **plateau inclinable, tete rotative, multi-tete, evaluation
+de volume**. Les trois premiers se comptent en degres de liberte, le
+quatrieme se calcule. `tools/volume_utile.py` fait le calcul.
+
+### 1. Plateau inclinable — trois points, et la borne est dure
+
+Trois actionneurs verticaux sous le plateau donnent **Z plus le basculement
+dans n'importe quel azimut**. Pas de berceau, pas d'arbre Ø30, pas de bague
+tournante, pas de garde plateau-buse de 12 mm.
+
+La borne ne depend ni de la tete ni du slicer, seulement de l'empattement
+et de la course des vis -- levier = 1,5 x rayon des points :
+
+| rayon des points | course differentielle | brut | utile (80 %) |
+|---|---|---|---|
+| 100 mm | 100 mm | 33,7° | 27,0° |
+| 100 mm | 150 mm | **45,0°** | **36,0°** |
+| 150 mm | 100 mm | 24,0° | 19,2° |
+| 150 mm | 200 mm | 41,6° | 33,3° |
+
+**Un grand plateau s'incline mal.** Pour atteindre les 45° de D16 il faut
+un plateau d'environ Ø200 et 150 mm de course differentielle. C'est le
+premier arbitrage reel de la machine, et il pousse vers le petit.
+
+Le materiel existe deja : **Voron Trident** est un CoreXY a trois moteurs Z
+independants sous le plateau. Manquent seulement des rotules aux trois
+appuis -- les siennes sont rigides -- la course differentielle, et la
+cinematique firmware.
+
+### 2. Tete rotative — lever l'ambiguite avant de chiffrer
+
+Trois choses differentes portent ce nom :
+
+| | degres de liberte d'orientation | ce que ca achete |
+|---|---|---|
+| rotation autour de son PROPRE axe (C) | **zero** | presenter la face etroite du bloc dans le sens de bascule |
+| rotation autour d'un axe HORIZONTAL (bascule B) | **un** | l'acces en biais, mais la gravite tire le cordon (D16) |
+| tete au bout d'un bras qui pivote | un, plus une translation couplee | idem, avec un porte-a-faux en plus |
+
+Le premier cas est le seul gratuit, et il est **deja obtenu autrement** :
+un bloc chauffant carre 20x20 limite a arctan(4,5/14,1) = 17,7° sur sa
+diagonale et 24,2° sur sa face. Un bloc CYLINDRIQUE donne les 24,2° dans
+toutes les directions, sans moteur. La rotation C ne rattrape que le defaut
+d'un bloc carre.
+
+**Consequence** : avec une table a trois points, la tete n'a besoin
+d'aucun axe. Le compte tombe juste.
+
+### 3. Le compte d'axes — cinq moteurs, cinq degres, aucune redondance
+
+| | moteurs | apporte |
+|---|---|---|
+| chariot | X, Y | position horizontale |
+| plateau | Z1, Z2, Z3 | hauteur + basculement dans tout azimut |
+
+Cinq moteurs, trois degres de position et deux d'orientation. Le sixieme --
+la rotation autour de l'axe de la buse -- **n'a pas de sens pour une buse
+ronde**. Rien a supprimer, rien de redondant.
+
+Ce que ca elimine par rapport au TRT de D2 : le berceau (13 des 21 pieces
+usinees de la Fractal), la bague tournante, la garde plateau-buse, et le
+decollement par rotation de la piece sur elle-meme.
+
+Ce que ca conserve de D16 : la buse reste verticale, le plan de coupe
+devient horizontal, **la gravite presse le cordon a toute inclinaison**.
+C'est l'argument qui avait sauve le TRT, et il survit ici sans le berceau.
+
+Ce que ca coute : **aucun firmware n'existe**. Ni Klipper ni RepRapFirmware
+n'ont de cinematique de plateau basculant a trois points. La
+cinematique directe et inverse sont fermees et courtes -- un plan par trois
+points -- mais elles sont a ecrire et a homologuer.
+
+### 4. Evaluation de volume — le chiffre que personne n'annonce
+
+Quand le plateau s'incline de theta, la piece bascule avec lui : son point
+haut monte, son enveloppe s'elargit, le bord du plateau plonge. Le volume
+**garanti** -- celui ou n'importe quelle piece passe a n'importe quelle
+inclinaison -- s'effondre.
+
+Sur un cadre de Voron Trident 300 (X300 Y300 Z250) :
+
+| inclinaison | cylindre utile | volume | perte |
+|---|---|---|---|
+| 0° | Ø300 x 250 | 17,67 L | — |
+| 15° | Ø200 x 206 | 6,47 L | 63 % |
+| 25° | Ø224 x 114 | 4,49 L | 75 % |
+| 35° | Ø240 x 90 | 4,07 L | **77 %** |
+| 45° | Ø284 x 70 | 4,43 L | 75 % |
+
+**Une machine 5 axes a plateau inclinable est naturellement plate.** Le
+terme dominant est `H.sin(theta)` : la hauteur coute beaucoup plus cher que
+la largeur. Passe 20° l'optimum devient un galet large et bas, et le volume
+ne bouge presque plus -- la perte est payee d'un coup, tot.
+
+Il faut aussi **106 mm de vide sous un plateau Ø300 a 45°**, et 100 mm de
+course Z mangee par la seule bascule.
+
+**Honnetete du chiffre** : c'est le volume GARANTI. Une piece qui ne
+demande 45° que sur un detail n'a pas besoin de toute l'enveloppe a 45° --
+le volume reel est entre ce chiffre et celui a 0°, et depend de la piece.
+Ce que le tableau borne, c'est ce qu'on peut promettre sans connaitre la
+piece.
+
+### 5. Multi-tete — le cout est en volume, pas en masse
+
+Quatre docks de 55 x 60 mm le long du fond :
+
+| | volume a 0° | volume a 35° |
+|---|---|---|
+| une tete | 17,67 L | 4,07 L |
+| quatre tetes | 11,31 L | 2,08 L |
+
+**Moitie du volume utile en moins**, a inclinaison egale. Et chaque outil
+parque est un obstacle de plus dans le champ de bascule de la piece.
+
+Le changeur d'outil de l'Archer est une belle piece d'ingenierie, mais
+c'est une fonctionnalite de machine mature. **Hors perimetre tant que la
+cinematique n'est pas figee** -- il se rajoute apres, il ne conditionne
+rien.
+
+### Ce que la base devient
+
+**Cadre CoreXY ordinaire, plateau Ø200 sur trois actionneurs a 150 mm de
+course differentielle, tete fixe a bloc cylindrique et refroidissement
+annulaire, une seule tete.** Cinq moteurs, 36° utiles, environ 1,2 L
+garanti.
+
+Ce n'est pas une petite machine par economie : c'est ce que la geometrie
+autorise. Le point dur n'est plus mecanique -- il est dans la cinematique
+firmware, qui n'existe nulle part.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
