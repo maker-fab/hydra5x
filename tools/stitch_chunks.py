@@ -43,8 +43,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 from export_chunks import (decalage_a_plat, decouper, poser_a_plat,  # noqa: E402
                            spherical_to_normal)
 import cinematique_3points as c3  # noqa: E402
+import repere_machine as rm  # noqa: E402
 
 AB_FEEDRATE = 25.0          # deg/s, comme Cortex
+LIT_SLICER = (100.0, 100.0)   # centre du plateau vu par PrusaSlicer
+
 # Les vitesses des verins sont calculees cote machine, par la macro
 # BED_POSE de firmware/plateau-3-verins.cfg : c'est la que vivent la
 # geometrie et les butees, un seul endroit a corriger.
@@ -138,6 +141,50 @@ def epilogue_3points(poses):
             "M104 S0", "M140 S0", "M84"]
 
 
+def poses_platine(directions, rayon):
+    """Hauteurs des trois verins de la platine, par chunk.
+
+    Pour la TETE, la normale de la platine est l'axe de la buse, donc la
+    direction de tranchage elle-meme. Les hauteurs sont **relatives** : le
+    mode commun est porte par l'axe Z de la machine, la platine ne fournit
+    que le differentiel.
+    """
+    poses = [np.zeros(3)]
+    for theta, phi in directions[1:]:
+        poses.append(c3.hauteurs_normale(spherical_to_normal(theta, phi),
+                                         0.0, rayon))
+    poses.append(np.zeros(3))
+    return poses
+
+
+def bloc_bascule_platine(k, poses, z_courant, course_diff):
+    """Degagement puis inclinaison de la tete."""
+    if k == 0:
+        return []
+    etendue = float(poses[k].max() - poses[k].min())
+    if etendue > course_diff + 1e-6:
+        raise ValueError(
+            f"chunk {k} : {etendue:.1f} mm d'ecart entre verins de platine, "
+            f"course differentielle disponible {course_diff:.1f} mm")
+    return [f"; ---- chunk {k} : inclinaison de la tete ----",
+            f"G0 F1800 Z{z_courant + DEGAGEMENT_Z:.3f} ; degager avant bascule",
+            f"G0 X{PARKING[0]} Y{PARKING[1]} ; ecarter la tete",
+            f"; ecart entre verins : {etendue:.2f} mm sur {course_diff:.0f} "
+            "disponibles",
+            f"TOOL_TILT Z1={poses[k][0]:.4f} Z2={poses[k][1]:.4f} "
+            f"Z3={poses[k][2]:.4f}",
+            "; inclinaison terminee",
+            "G92 E0 ; l'axe E repart de zero pour ce chunk"]
+
+
+def epilogue_platine(poses):
+    return ["; ---- fin ----",
+            "G1 F2400 E-5 ; retraction finale",
+            f"TOOL_TILT Z1={poses[-1][0]:.4f} Z2={poses[-1][1]:.4f} "
+            f"Z3={poses[-1][2]:.4f}",
+            "M104 S0", "M140 S0", "M84"]
+
+
 def decalages(chunks, directions):
     """Decalage machine de chaque chunk, relatif au chunk 0.
 
@@ -197,6 +244,10 @@ def options_prusa(couche, premier_chunk):
         "--support-material=0",
         "--brim-width", "0",
         "--skirts", "0",
+        # explicite : la transposition vers le repere machine a besoin du
+        # centre du plateau du trancheur, pas de sa valeur par defaut
+        "--bed-shape", f"0x0,{LIT_SLICER[0]*2}x0,"
+                       f"{LIT_SLICER[0]*2}x{LIT_SLICER[1]*2},0x{LIT_SLICER[1]*2}",
         "--start-gcode", "",
         "--end-gcode", "",
     ]
@@ -335,10 +386,17 @@ def main():
     ap.add_argument("--out", type=Path, default=Path("results/gcode/y_cousu.gcode"))
     ap.add_argument("--couche", type=float, default=0.2)
     ap.add_argument("--angle", type=float, default=30.0)
-    ap.add_argument("--machine", choices=("berceau", "3points"),
+    ap.add_argument("--machine", choices=("berceau", "3points", "platine"),
                     default="berceau",
-                    help="berceau a deux axes (protocole Cortex) ou table "
-                         "basculante a trois verins (D23)")
+                    help="berceau a deux axes (protocole Cortex), table "
+                         "basculante a trois verins (D23), ou platine a "
+                         "trois verins sur la tete (D30)")
+    ap.add_argument("--pivot-tete", type=float, default=80.0,
+                    help="distance du centre de bascule de la platine a la "
+                         "pointe de la buse, mm")
+    ap.add_argument("--position-piece", type=float, nargs=3,
+                    default=(200.0, 200.0, 0.0), metavar=("X", "Y", "Z"),
+                    help="ou la piece est posee sur le plateau fixe, mm")
     ap.add_argument("--rayon", type=float, default=150.0,
                     help="rayon du cercle des trois verins, mm")
     ap.add_argument("--z-plateau", type=float, default=200.0,
@@ -355,6 +413,9 @@ def main():
     chunks = decouper(piece, directions, departs)
     decal = decalages(chunks, directions)
     trois = args.machine == "3points"
+    platine = args.machine == "platine"
+    if platine:
+        poses = poses_platine(directions, args.rayon)
     if trois:
         poses = hauteurs_chunks(directions, args.rayon, args.z_plateau)
         a = b = va = vb = None
@@ -364,7 +425,11 @@ def main():
     print(f"Piece en Y : {len(piece.faces)} faces, {piece.volume:.1f} mm3")
     print(f"Machine : {args.machine}")
     for k in range(len(directions)):
-        if trois:
+        if platine:
+            h = poses[k]
+            print(f"  chunk {k} : platine {h[0]:7.2f} {h[1]:7.2f} {h[2]:7.2f} mm"
+                  f"   ecart {h.max()-h.min():6.2f} mm")
+        elif trois:
             h = poses[k]
             print(f"  chunk {k} : verins {h[0]:7.2f} {h[1]:7.2f} {h[2]:7.2f} mm"
                   f"   ecart {h.max()-h.min():6.2f} mm")
@@ -386,10 +451,14 @@ def main():
             g = trancher(args.prusa, stl, Path(tmp) / f"c{k}.gcode",
                          args.couche, premier_chunk=(k == 0))
             corps = corps_utile(g)
-            sortie += (bloc_rotation_3points(k, poses,
-                                             z_max(sortie), args.course_diff)
-                       if trois else
-                       bloc_rotation(k, a, b, va, vb, z_max(sortie)))
+            if platine:
+                sortie += bloc_bascule_platine(k, poses, z_max(sortie),
+                                               args.course_diff)
+            elif trois:
+                sortie += bloc_rotation_3points(k, poses, z_max(sortie),
+                                                args.course_diff)
+            else:
+                sortie += bloc_rotation(k, a, b, va, vb, z_max(sortie))
             # NE PAS nommer cette variable `b` : elle ecraserait la liste
             # des angles B utilisee par le chunk suivant.
             bornes = pose.bounds
@@ -397,7 +466,17 @@ def main():
             cy = (bornes[0][1] + bornes[1][1]) / 2.0
             sortie.append(f"; HYDRA5X_REPERE chunk={k} cx={cx:.4f} cy={cy:.4f}"
                           " ; centre XY du maillage, pour le test de collision")
-            sortie += ligne_decalage(decal[k])
+            if platine:
+                # la piece ne bouge plus : c'est la TRAJECTOIRE qui tourne.
+                # La transformation absorbe aussi le decalage de mise a plat
+                # et la compensation du point pilote -- une seule matrice.
+                mat = rm.matrice(
+                    trimesh.geometry.align_vectors(normale, [0, 0, 1]),
+                    decalage_a_plat(morceau, normale),
+                    args.pivot_tete, args.position_piece, LIT_SLICER)
+                corps, _ = rm.transformer(corps, mat)
+            else:
+                sortie += ligne_decalage(decal[k])
             sortie.append(f"; ---- chunk {k} : {len(corps)} lignes ----")
             if k > 0:
                 sortie += approche(corps, HAUTEUR_REPRISE)
@@ -405,7 +484,8 @@ def main():
             print(f"  chunk {k} : {len(corps)} lignes de trajets, "
                   f"Z max {z_max(corps):.2f} mm")
 
-    sortie += (epilogue_3points(poses) if trois
+    sortie += (epilogue_platine(poses) if platine
+               else epilogue_3points(poses) if trois
                else epilogue(va, vb))
     args.out.write_text("\n".join(sortie) + "\n")
     print(f"\n  {args.out}  {len(sortie)} lignes, "

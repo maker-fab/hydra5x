@@ -2075,6 +2075,98 @@ l'electronique, pas avant.
 
 ---
 
+## D31 — Le verrou de D30 est leve : la trajectoire tourne, pas la piece
+
+Point 1 de D30 fait. `tools/repere_machine.py`, `stitch_chunks.py
+--machine platine`, quatre controles de plus dans `test_3points.py`.
+
+### Ce qu'il fallait comprendre d'abord
+
+Quand c'est le PLATEAU qui bascule, incliner le plateau **defait
+exactement** la mise a plat du chunk : les coordonnees du G-code sont deja
+les bonnes, a une translation pres. C'est ce qui rendait D23 si simple, et
+je n'avais pas vu que c'etait un cadeau de cette architecture-la.
+
+Quand c'est la TETE qui s'incline, la piece ne bouge plus. **Il faut faire
+tourner la trajectoire elle-meme.** C'est le prix de D30, et c'est
+exactement le genre de prix qu'on a choisi de payer -- du logiciel.
+
+### La transformation, en une matrice
+
+    XYZ = R^-1 . (gcode - centre_slicer + d + (0, 0, p)) + position_piece
+
+`R` la rotation qui a pose le chunk a plat, `d` la translation qu'elle a
+retiree, `p` la distance du centre de bascule de la platine a la pointe de
+buse, et le reste des placements.
+
+**Le point qui evite tout le travail que je croyais devoir faire** : en
+regime indexe l'orientation ne change pas pendant un bloc. La compensation
+du point pilote n'est donc **pas un calcul par segment** -- c'est un terme
+constant, absorbe dans la meme matrice. Une multiplication par point, rien
+de plus.
+
+### Ce que la transposition refuse, plutot que de le faire mal
+
+- **Les arcs G2/G3.** Une rotation hors du plan ne conserve pas un arc
+  circulaire dans le plan machine. Refus explicite, avec l'option de
+  tranchage a changer dans le message.
+- **Le mode relatif G91** sur les axes de position : un deplacement
+  relatif se transforme en vecteur, pas en point. Les melanger
+  silencieusement produirait une derive.
+
+Et les coordonnees sont **toujours reemises en entier** : une rotation
+couple les trois axes, donc un `G1 X10` du repere chunk devient
+`G1 X8.6603 Y0.0000 Z-5.0000`. Ne reemettre que X aurait produit une
+trajectoire fausse et silencieuse -- le genre de faute que ce depot a deja
+commise sept fois.
+
+### Verification
+
+Trois niveaux, du plus exact au plus proche du reel.
+
+**1. Le maillage.** On pose un chunk a plat, on applique la matrice a ses
+sommets : on doit retrouver le chunk d'origine. **Ecart 7,1.10^-15 mm** sur
+les trois chunks. Une matrice fausse d'un signe se verrait ici.
+
+**2. La compensation de pointe.** Le terme en `p` doit deplacer le point
+d'exactement 80 mm **le long de l'axe de buse** du chunk, pas ailleurs.
+Ecart 2,3.10^-14 mm sur douze orientations.
+
+**3. Le G-code reel.** On tranche la piece en Y, on transpose, on relit les
+**32 054 points d'extrusion** emis, on retire la compensation de pointe, et
+on mesure leur distance signee a la piece d'origine :
+
+| chunk | points | distance min | distance max | dans la matiere |
+|---|---|---|---|---|
+| 0 | 26 921 | +0,032 mm | +4,638 mm | **100 %** |
+| 1 | 1 942 | −0,063 mm | +2,822 mm | **100 %** |
+| 2 | 3 191 | −0,068 mm | +3,310 mm | **100 %** |
+
+**Tous les points deposent dans la piece.** Les quelques centiemes
+negatifs sont le perimetre exterieur, dont l'axe est a une demi-largeur de
+cordon de la peau -- attendu, et c'est le signe que l'echelle est juste.
+
+`test_3points.py` : **12 controles sur 12**.
+
+### Ce que ca laisse ouvert
+
+- **La vitesse.** `F` traverse sans changement, ce qui est correct pour la
+  longueur d'un segment -- une rotation conserve les longueurs. Mais la
+  machine repartit maintenant ce deplacement sur trois axes au lieu de
+  deux. La dynamique reelle de la machine changera ; le debit, non.
+- **La course Z.** Transposer fait monter le Z maximum : 108 a 144 mm sur
+  la piece en Y avec un pivot de 80 mm. C'est la hauteur de la platine
+  au-dessus de la piece, pas la piece qui grandit.
+- **Le controle de collision** continue de tourner sur le G-code **avant**
+  transposition, dans le repere du chunk. C'est le bon repere : la
+  collision ne depend que de la pose relative, etablie depuis D29 et
+  verifiee a nouveau ici.
+
+Le point 1 de D30 est clos. Reste la platine a dessiner, sa raideur a
+verifier, et la chaine continue.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,

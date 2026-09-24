@@ -131,6 +131,81 @@ def butees():
     return True, f"{len(details)} cas conformes"
 
 
+def repere_machine_exact():
+    """La trajectoire transposee retombe exactement sur le chunk.
+
+    Le controle le plus fort de la chaine « tete inclinable » : on pose un
+    chunk a plat, on applique la matrice de transposition a ses sommets, et
+    on doit retrouver le chunk d'origine au flottant pres. Si la matrice
+    etait fausse d'un signe ou d'une translation, ca se verrait ici et non
+    a l'impression.
+    """
+    import trimesh
+    import repere_machine as rm
+    from export_chunks import (decalage_a_plat, decouper, poser_a_plat,
+                               spherical_to_normal)
+    from test_slice import make_y_part
+
+    piece = make_y_part(angle=30.0)
+    dirs = [(0.0, 0.0), (30.0, 0.0), (30.0, 180.0)]
+    chunks = decouper(piece, dirs, [[0, 0, 0], [0, 0, 28.0], [0, 0, 28.0]])
+    pire = 0.0
+    for k, morceau in enumerate(chunks):
+        n = spherical_to_normal(*dirs[k])
+        m = rm.matrice(trimesh.geometry.align_vectors(n, [0, 0, 1]),
+                       decalage_a_plat(morceau, n), 0.0, (0, 0, 0), (0, 0))
+        revenu = np.array([rm.appliquer(m, v)
+                           for v in poser_a_plat(morceau, n).vertices])
+        pire = max(pire, float(np.abs(revenu - morceau.vertices).max()))
+    return pire < 1e-9, f"ecart max {pire:.3e} mm sur trois chunks"
+
+
+def compensation_de_pointe():
+    """Le terme de pivot deplace bien la pointe le long de l'axe de buse."""
+    import trimesh
+    import repere_machine as rm
+    from export_chunks import spherical_to_normal
+
+    pire = 0.0
+    for theta in (0.0, 15.0, 30.0, 45.0):
+        for phi in (0.0, 90.0, 210.0):
+            n = spherical_to_normal(theta, phi)
+            rot = trimesh.geometry.align_vectors(n, [0, 0, 1])
+            sans = rm.matrice(rot, np.zeros(3), 0.0, (0, 0, 0), (0, 0))
+            avec = rm.matrice(rot, np.zeros(3), 80.0, (0, 0, 0), (0, 0))
+            ecart = rm.appliquer(avec, (0, 0, 0)) - rm.appliquer(sans, (0, 0, 0))
+            # doit valoir exactement 80 mm le long de la normale du chunk
+            pire = max(pire, float(np.linalg.norm(ecart - 80.0 * n)))
+    return pire < 1e-9, f"ecart a 80 mm le long de l'axe : {pire:.3e} mm"
+
+
+def refus_arcs_et_relatif():
+    """Ce que la transposition ne sait pas faire, elle le refuse."""
+    import repere_machine as rm
+    m = np.eye(4)
+    for ligne, mot in (("G2 X10 Y10 I5 J0", "arc"), ("G91", "relatif")):
+        try:
+            rm.transformer([ligne], m)
+        except rm.SectionIllisible:
+            continue
+        return False, f"« {ligne} » accepte alors qu'il devrait etre refuse"
+    return True, "arcs G2/G3 et mode relatif refuses"
+
+
+def coordonnees_completes():
+    """Un mouvement partiel ressort complet : la rotation couple les axes."""
+    import repere_machine as rm
+    import trimesh
+    from export_chunks import spherical_to_normal
+    m = rm.matrice(trimesh.geometry.align_vectors(
+        spherical_to_normal(30.0, 0.0), [0, 0, 1]),
+        np.zeros(3), 0.0, (0, 0, 0), (0, 0))
+    out, _ = rm.transformer(["G1 X0 Y0 Z0", "G1 X10"], m)
+    if not all(a in out[1] for a in ("X", "Y", "Z")):
+        return False, f"sortie incomplete : {out[1]!r}"
+    return True, f"« G1 X10 » -> {out[1]!r}"
+
+
 CONTROLES = [
     ("aller-retour hauteurs <-> pose", aller_retour),
     ("normale du chunk ramenee sur +Z", normale_vers_vertical),
@@ -140,6 +215,10 @@ CONTROLES = [
     ("forme lineaire en gradient", forme_lineaire),
     ("butees hautes, basses, differentielle", butees),
     ("garde sur course insuffisante", garde_de_course),
+    ("trajectoire transposee == chunk", repere_machine_exact),
+    ("compensation du point pilote", compensation_de_pointe),
+    ("refus des arcs et du relatif", refus_arcs_et_relatif),
+    ("coordonnees reemises en entier", coordonnees_completes),
 ]
 
 
