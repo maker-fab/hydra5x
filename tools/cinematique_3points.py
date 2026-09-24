@@ -85,6 +85,59 @@ def normale_plateau(theta_deg, phi_deg):
     return m @ np.array([0.0, 0.0, 1.0])
 
 
+def gradient(theta_deg, phi_deg):
+    """Pente du plateau en composantes cartesiennes (gx, gy).
+
+    **La parametrisation qui rend la cinematique lineaire.** Avec
+
+        gx = tan(theta).cos(phi)      gy = tan(theta).sin(phi)
+
+    la hauteur d'un verin devient
+
+        h_i = z + R.cos(a_i).gx + R.sin(a_i).gy
+
+    soit une combinaison lineaire fixe de (z, gx, gy) -- exactement la
+    forme qu'un CoreXY a en (x, y). C'est ce qui permettra d'ecrire un
+    noyau cinematique de firmware court et exact, au lieu d'un calcul
+    trigonometrique par segment.
+
+    En (theta, phi) la cinematique est non lineaire et l'azimut est
+    singulier a plat. En (gx, gy) il n'y a ni singularite ni cas
+    particulier.
+    """
+    t = np.tan(np.radians(theta_deg))
+    p = np.radians(phi_deg)
+    return float(t * np.cos(p)), float(t * np.sin(p))
+
+
+def depuis_gradient(gx, gy):
+    """(gx, gy) -> (theta, phi). Reciproque de `gradient`."""
+    return (float(np.degrees(np.arctan(np.hypot(gx, gy)))),
+            float(np.degrees(np.arctan2(gy, gx))) % 360.0)
+
+
+def hauteurs_gradient(gx, gy, z, rayon):
+    """Hauteurs des verins, forme lineaire. Equivalente a `hauteurs`."""
+    a = np.radians(np.array(AZIMUTS_VERINS))
+    return z + rayon * (np.cos(a) * gx + np.sin(a) * gy)
+
+
+def dans_les_butees(h, z_min, z_max, course_differentielle):
+    """Verifie une pose contre les butees. Retourne (ok, raison)."""
+    h = np.asarray(h, dtype=float)
+    if h.min() < z_min:
+        return False, (f"verin sous la butee basse : {h.min():.2f} < "
+                       f"{z_min:.2f} mm")
+    if h.max() > z_max:
+        return False, (f"verin au-dessus de la butee haute : {h.max():.2f} > "
+                       f"{z_max:.2f} mm")
+    etendue = float(h.max() - h.min())
+    if etendue > course_differentielle:
+        return False, (f"ecart entre verins {etendue:.2f} mm > course "
+                       f"differentielle {course_differentielle:.2f} mm")
+    return True, f"ecart {etendue:.2f} mm, verins de {h.min():.2f} a {h.max():.2f}"
+
+
 def pose(h, rayon):
     """Trois hauteurs -> (theta, phi, z). Reciproque exacte de `hauteurs`."""
     a = np.radians(np.array(AZIMUTS_VERINS))

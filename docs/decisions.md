@@ -1608,6 +1608,105 @@ commentaire pres.
 
 ---
 
+## D27 — Incliner la TETE par le meme procede : trois verins, pas quatre
+
+Idee proposee : appliquer a la tete ce qu'on fait au plateau -- une
+platine suspendue a plusieurs points dont on pilote les hauteurs, donc une
+inclinaison dans tout azimut, **et un changeur d'outil qui reste
+possible**.
+
+C'est coherent, et ca a un merite que la version a berceau n'a pas.
+
+### D'abord : trois points, pas quatre
+
+Un plan est defini par **trois** points. Un quatrieme rend le systeme
+hyperstatique : quatre verins rigides sur une platine rigide se battent
+entre eux, et la repartition des efforts depend des tolerances, pas de la
+commande.
+
+La Voron 2.4 s'en accommode parce que ses quatre moteurs Z **nivellent un
+portique a l'arret**, avec un peu de souplesse admise, et ne l'inclinent
+jamais en marche. Une inclinaison commandee en cours d'impression ne
+pardonne pas ca. **Trois.**
+
+### Le merite reel : la course s'effondre avec le rayon
+
+Meme formule que pour le plateau -- `course = V3 . R . tan(theta)` -- mais
+appliquee a une platine de tete, donc a un tout petit rayon :
+
+| rayon | ce que c'est | 25° | 35° | 45° |
+|---|---|---|---|---|
+| 150 mm | plateau 400 (D24) | 121 mm | **182 mm** | 260 mm |
+| 60 mm | platine de tete | 49 mm | 73 mm | 104 mm |
+| **50 mm** | **platine de tete** | 40 mm | **61 mm** | 87 mm |
+| 40 mm | platine compacte | 32 mm | 49 mm | 69 mm |
+
+**61 mm au lieu de 182 pour la meme inclinaison.** Trois fois moins de
+course, donc des vis courtes, un bati qui ne monte pas a un metre, et des
+verins qui peuvent etre rapides. C'est le vrai argument de cette idee, et
+il est fort.
+
+### Le changeur d'outil : compatible, mais il l'etait deja
+
+D20 l'avait etabli : avec l'axe de bascule **sur le chariot** et seul le
+hotend echange, on commande la bascule a sa reference et on accoste comme
+sur une 3 axes. Le changeur redevient un probleme resolu.
+
+La version parallele ajoute quand meme quelque chose : une bascule serie
+demande une **chape autour de la buse**, encombrante et placee exactement
+la ou se trouve la matiere deja deposee. Une platine a trois verins est
+**plate** : l'accouplement d'outil se pose dessus, sans rien entourer.
+
+### Les trois couts, chiffres
+
+**1. Le point pilote se deplace.** Le pivot d'une platine est au-dessus de
+la pointe, pas dedans. La pointe part en arc :
+
+| pivot au-dessus de la pointe | 25° | 35° | 45° |
+|---|---|---|---|
+| 60 mm | 25 mm | 34 mm | 42 mm |
+| 80 mm | 34 mm | **46 mm** | 57 mm |
+| 100 mm | 42 mm | 57 mm | 71 mm |
+
+A compenser en X, Y et Z a chaque mouvement de bascule -- la compensation
+RTCP de `docs/mouvements.md` §1, qui devient **obligatoire des le premier
+essai**, pas une option.
+
+**2. La tete grossit, et l'enveloppe le paie deux fois.** La platine et
+ses trois verins elargissent la tete. Debord lateral en bascule :
+
+| | B=0° | B=35° | B=45° |
+|---|---|---|---|
+| tete nue (L70, w25) | 25 mm | 61 mm | 67 mm |
+| tete + platine (L95, w55) | 55 mm | 99 mm | **106 mm** |
+
+Le cout en cadre passe de 84 a **102 mm** de chaque cote. L'avantage
+structurel de la tete inclinable -- un cout borne par la taille de la tete
+(D21) -- tient toujours, mais la borne monte.
+
+**3. La masse va sur le chariot mobile.** Trois verins, trois moteurs,
+une platine. Sauf a les entrainer par courroies depuis des moteurs fixes,
+facon Core R-Theta (D18) -- ce qui est possible et deja repertorie.
+
+### Ce que ca ne change pas
+
+**L'argument qui a decide D23 tient entier** : une tete inclinable depose
+sur un plan incline, et la gravite tire le cordon dans le plan de la
+couche. Un plateau basculant garde le plan de depot horizontal. Cette
+idee rend la tete inclinable **moins chere et plus compacte**, elle ne la
+rend pas meilleure pour le depot.
+
+**Statut : retenue comme variante serieuse, pas comme revision de D23.**
+Elle devient le meilleur candidat si l'essai de depot incline montre que
+le cordon tient -- et elle reglerait alors d'un coup les 610 mm de course
+de vis et le bati d'un metre de D24.
+
+Elle s'ajoute donc a ce que l'essai doit trancher. Cet essai decide
+maintenant de trois choses : l'angle utile, s'il faut deux mecanismes
+(D22), et laquelle des deux architectures construire.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,

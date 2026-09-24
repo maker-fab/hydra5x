@@ -87,12 +87,48 @@ def garde_de_course():
     de G-code inexecutable."""
     import stitch_chunks as sc
     poses = [np.full(3, 200.0), c3.hauteurs(VISE, 0.0, 200.0, RAYON)]
-    vites = sc.vitesses_verins(poses)
     try:
-        sc.bloc_rotation_3points(1, poses, vites, 10.0, 50.0)
+        sc.bloc_rotation_3points(1, poses, 10.0, 50.0)
     except ValueError as e:
         return "chunk 1" in str(e), f"leve bien : {e}"
     return False, "aucune erreur levee alors que la course est insuffisante"
+
+
+def forme_lineaire():
+    """La forme en gradient donne exactement les memes hauteurs.
+
+    C'est la parametrisation qui rendra un noyau de firmware court : une
+    combinaison lineaire fixe de (z, gx, gy), sans trigonometrie ni
+    singularite a plat.
+    """
+    pire = 0.0
+    for theta in np.arange(0.0, 40.1, 0.5):
+        for phi in np.arange(0.0, 360.0, 7.5):
+            gx, gy = c3.gradient(theta, phi)
+            pire = max(pire, float(np.abs(
+                c3.hauteurs_gradient(gx, gy, 200.0, RAYON)
+                - c3.hauteurs(theta, phi, 200.0, RAYON)).max()))
+            t2, _ = c3.depuis_gradient(gx, gy)
+            pire = max(pire, abs(t2 - theta))
+    return pire < 1e-9, f"ecart lineaire / trigonometrique {pire:.3e}"
+
+
+def butees():
+    """Les trois refus attendus, et le cas qui passe."""
+    cas = [
+        (c3.hauteurs(VISE, 0.0, 300.0, RAYON), True, "pose nominale"),
+        (c3.hauteurs(VISE, 0.0, 50.0, RAYON), False, "butee basse"),
+        (c3.hauteurs(VISE, 0.0, 560.0, RAYON), False, "butee haute"),
+        (c3.hauteurs(38.0, 0.0, 300.0, RAYON), True, "juste sous la butee"),
+        (c3.hauteurs(39.0, 0.0, 300.0, RAYON), False, "course differentielle"),
+    ]
+    details = []
+    for h, attendu, nom in cas:
+        ok, _ = c3.dans_les_butees(h, 0.0, 610.0, 210.0)
+        if ok != attendu:
+            return False, f"« {nom} » : attendu {attendu}, obtenu {ok}"
+        details.append(nom)
+    return True, f"{len(details)} cas conformes"
 
 
 CONTROLES = [
@@ -101,6 +137,8 @@ CONTROLES = [
     ("centre du plateau immobile", centre_immobile),
     ("anisotropie 1,5 / racine de 3", anisotropie),
     ("budget de course et reciprocite", budget_de_course),
+    ("forme lineaire en gradient", forme_lineaire),
+    ("butees hautes, basses, differentielle", butees),
     ("garde sur course insuffisante", garde_de_course),
 ]
 
