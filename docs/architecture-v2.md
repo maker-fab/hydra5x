@@ -48,8 +48,9 @@ course de B. C'est pourquoi le Core R-Theta va à −180° sans difficulté.
 ## Ce que ça coûte, honnêtement
 
 - **Masse et encombrement sur la tête.** Le moteur B s'ajoute au hotend.
-  Mesuré en D-encombrement : le moteur n'est pas limitant géométriquement
-  (56-58°), mais il l'est dynamiquement.
+  Mesuré : le moteur n'est pas limitant géométriquement (56-58°), mais il
+  l'est dynamiquement. **Levée par le montage Core de Bird** — voir la
+  variante ci-dessus, les moteurs restent sur le chariot.
 - **Filament à travers une articulation.** Chiffré dans `envelope.md` :
   70 à 85 mm de mou suffisent, une boucle de service.
 - **Dépôt désaligné de la gravité** quand B est grand. Le TRT gardait le
@@ -57,6 +58,61 @@ course de B. C'est pourquoi le Core R-Theta va à −180° sans difficulté.
   n'est pas mesuré.
 - **Rien n'existe côté firmware.** Klipper ne connaît pas cette
   cinématique ; RepRapFirmware la fait sur 4 axes chez Bird.
+
+## Variante — table 3 points, tête rotative déportée
+
+Deux idées qui se combinent bien.
+
+### Table sur trois points indépendants
+
+Trois actionneurs verticaux sous le plateau donnent `Z` **plus le
+basculement dans n'importe quel azimut** — pas un axe B unique. Cinématique
+parallèle, type tripode.
+
+**Ce que ça supprime** : l'axe A. La pièce n'a jamais à tourner sur
+elle-même, donc ni collecteur tournant, ni enroulement de câbles. Et le
+berceau basculant disparaît, avec la garde de 12 mm.
+
+Débattement, calculé :
+
+| entraxe | course | inclinaison | utile (80 %) |
+|---|---|---|---|
+| 200 mm | 100 mm | 26,6° | 21,3° |
+| 160 mm | 80 mm | 26,6° | 21,3° |
+| 120 mm | 120 mm | 45,0° | 36,0° |
+
+Avec 21,3° de table et une tête améliorée à ~26°, on atteint **47°** — la
+cible de 45° établie dans ce fichier.
+
+### Le montage « Core » de Bird : les moteurs quittent la tête
+
+Le [Core R-Theta](https://www.3dnatives.com/imprimante-3d-polaire-4-axes-core-r%CE%B8-joshua-bird-23122024/)
+utilise **deux moteurs reliés par une courroie qui pilotent à la fois la
+translation X et la rotation de la tête** — un CoreXY appliqué à X et B.
+
+Les deux moteurs restent fixes sur le chariot Z. **Rien de lourd ne bouge
+avec la buse.** C'est la réponse directe à l'objection « masse sur la tête »
+listée plus bas : elle tombe.
+
+Coût annoncé de leur machine : **300 à 400 $**, contre 2 600 à 2 900 pour
+la Fractal.
+
+### Ce que cette variante coûte
+
+- **La pièce bascule quand même.** Le mode de collision de D9 et D13
+  revient, réduit proportionnellement — 21° au lieu de 45° — mais pas
+  supprimé. C'est l'avantage que la configuration mixte pure avait.
+- **Aucun firmware.** Ni Klipper ni RepRapFirmware n'ont de cinématique
+  pour une table 3 points basculante. À écrire.
+- **Couplage Z/inclinaison** : basculer déplace la hauteur du centre, à
+  compenser.
+- **Redondance** : tête (2 DOF) + table (3 DOF) + X/Y = sept axes pour six
+  degrés de liberté. Ce n'est pas un défaut — `envelope.md` le notait pour
+  la piste v2 : **le degré excédentaire donne un espace nul exploitable**.
+  La machine peut choisir, parmi les postures qui placent correctement la
+  buse, celle qui maximise la garde. C'est ce qui pourrait annuler le
+  retour du problème de collision, et ça se calcule avec
+  `check_collision.py`.
 
 ## Ce qu'il faudrait mesurer avant de décider
 
