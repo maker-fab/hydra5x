@@ -1307,7 +1307,7 @@ prochain jalon, et il est physique, pas logiciel.
 
 ---
 
-## D23 — Table inclinable retenue. Reste a choisir le mecanisme  ⟨ROUVERTE PAR D29 : son argument decisif ne tient pas⟩
+## D23 — Table inclinable retenue. Reste a choisir le mecanisme  ⟨ANNULEE PAR D30⟩
 
 Decision prise : **c'est le plateau qui s'oriente, pas la tete.** D2 est
 refermee sur ce point, apres avoir ete rouverte par D15.
@@ -1608,7 +1608,7 @@ commentaire pres.
 
 ---
 
-## D27 — Incliner la TETE par le meme procede : trois verins, pas quatre  ⟨LECTURE CORRIGEE PAR D28 : c'est le PORTIQUE qui bascule⟩
+## D27 — Incliner la TETE par le meme procede : trois verins, pas quatre  ⟨RETENUE PAR D30 ; D28 en est la variante portique⟩
 
 Idee proposee : appliquer a la tete ce qu'on fait au plateau -- une
 platine suspendue a plusieurs points dont on pilote les hauteurs, donc une
@@ -1980,6 +1980,98 @@ Ce qu'elle doit encore payer, et qui est du logiciel :
    de cadre de chaque cote.
 
 Ces deux-la sont bornes et connus. L'inertie du plateau ne l'est pas.
+
+---
+
+## D30 — Ligne conductrice : la piece ne bouge jamais
+
+Assez compare. Voici la ligne, et tout le reste s'y range.
+
+> **La piece ne bouge jamais. Ce qui s'oriente doit etre le plus petit et
+> le plus leger possible.**
+
+### Pourquoi celle-la
+
+Trois mesures, et une seule conclusion :
+
+1. **Deplacer la piece coute tout.** Son balayage mange 60 a 77 % du
+   volume, impose 70 % de hauteur de cadre en plus, et met 300 a 750 W de
+   chauffage sur une articulation mobile. Generative Machine, qui a fait
+   l'autre choix, a du escalader jusqu'au bati alu optimise en topologie
+   pour tenir la raideur -- ils le disent eux-memes.
+2. **Ce qui interdisait l'autre voie n'existe pas.** L'argument de la
+   gravite -- le seul qui tenait pour le plateau basculant -- a ete chiffre
+   en D29 : nombre de Bond 0,011, derive 0,01 micron, robuste sur quatre
+   materiaux, quatre decades de viscosite, et une fois le plateau
+   chauffant integre.
+3. **L'inertie decide de l'avenir, pas du present.** En indexe, les trois
+   familles se valent -- moins de 1,5 % du temps d'impression. En continu,
+   l'inertie va de 1 a 198. Or le continu est le seul endroit ou ce projet
+   gagne vraiment quelque chose : D11 et D12 ont montre que le
+   multidirectionnel planaire rapporte 17 % de matiere et **zero** en
+   resistance ; D14 que les 2 a 3x viennent des couches courbes.
+
+**Choisir un organe lourd, c'est choisir de rester dans l'indexe.** Ce
+n'est pas un compromis de cout, c'est renoncer au gain.
+
+### La machine qui en decoule
+
+| | |
+|---|---|
+| plateau | **fixe, plat, chauffant.** Pas de berceau, pas de bague tournante, pas de rotules, aucun fil a travers une articulation |
+| orientation | **platine a trois verins sur la tete**, R ≈ 50 mm |
+| course differentielle | **61 mm** pour 35° -- contre 182 pour un plateau de 400 |
+| bati | CoreXY ordinaire ; Z par le plateau qui descend ou le portique qui monte |
+| moteurs | X, Y, Z + 3 verins de platine = **6 pour 5 degres** |
+| changeur d'outil | accouplement porte par la platine, accostage a la reference (D20 b) |
+
+**La redondance du sixieme moteur est utile, pas subie** : le mode commun
+des trois verins est exactement la correction en Z dont la pointe a besoin
+quand la platine s'incline. On la paie une fois, elle sert deux fois.
+
+### Ce que ce virage ne coute pas
+
+**Rien du travail fait.** La cinematique a trois points ne connait qu'un
+rayon. Verifie a l'instant : `--rayon 50 --course-diff 70` produit le meme
+G-code, avec les memes `BED_POSE`, et `check_collision.py` rend le meme
+verdict.
+
+D19, D24, D25 et D26 restent donc valides **comme outillage** : ils ont
+produit la cinematique, ses tests et son integration. Ce qui tombe, c'est
+seulement l'organe sur lequel on l'applique -- un parametre, pas du code.
+
+D28, le portique basculant, reste la **variante de repli** : si la
+compensation de pointe se revele trop couteuse, elle disparait en
+inclinant le portique entier, au prix de la course et de l'inertie.
+
+### Ce qui reste a faire, dans l'ordre
+
+1. **La compensation du point pilote.** Pivot a ~80 mm au-dessus de la
+   pointe, 46 mm de derive a 35°. **Seul verrou reel, et il est logiciel** :
+   un post-traitement du G-code suffit en indexe.
+2. **Dessiner la platine**, puis mesurer sa silhouette avec
+   `mesurer_tete.py` : c'est elle qui fixera le cout en enveloppe, estime a
+   102 mm de cadre par cote.
+3. **Raideur de la platine** sous l'effort de depot et le verrouillage
+   d'outil -- `fea_bending.py` existe pour ca. Le jeu admissible est fixe :
+   0,1° = 0,12 mm a la pointe.
+4. **La chaine continue** : S4 sur notre piece, toujours bloquee au
+   plancher TetGen. C'est la que le gain se trouve.
+5. **Le materiel**, en dernier.
+
+L'essai de depot incline reste au catalogue, en **confirmation**. Il ne
+bloque plus rien.
+
+### Le point laisse ouvert, exprès
+
+**Klipper ou RepRapFirmware.** Les deux 5 axes vivants -- Archer,
+Generation One -- utilisent RRF. Ce depot emet du Klipper parce que Cortex
+en emet. En indexe, Klipper suffit ; en continu, RRF a de l'avance.
+
+Ce n'est pas urgent **parce que le contrat machine est un commutateur** :
+`stitch_chunks.py --machine` isole deja la sortie. Changer de firmware,
+c'est ajouter un cas, pas reecrire la chaine. A retrancher avant d'acheter
+l'electronique, pas avant.
 
 ---
 
