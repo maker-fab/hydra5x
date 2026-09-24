@@ -113,6 +113,25 @@ def decouper(maillage, directions, departs, mode="cortex"):
     return chunks
 
 
+def decalage_a_plat(morceau, normale):
+    """Translation que `transform_a_plat` retire au chunk, en mm.
+
+    Poser un chunk a plat le recentre en XY et pose son plan de coupe a
+    z=0. **Chaque chunk subit donc une translation differente**, et les
+    G-code qui en sortent ne sont plus dans un repere commun.
+
+    Sur la machine, incliner le plateau est l'operation inverse de poser a
+    plat : les coordonnees du G-code sont donc les bonnes, **a cette
+    translation pres**. La rendre permet de la remettre, au lieu de
+    decouvrir le decalage apres coup.
+    """
+    rot = trimesh.geometry.align_vectors(normale, [0, 0, 1])
+    sonde = morceau.copy()
+    sonde.apply_transform(rot)
+    centre = sonde.bounds.mean(axis=0)
+    return np.array([centre[0], centre[1], sonde.bounds[0][2]])
+
+
 def transform_a_plat(morceau, normale):
     """Matrice qui pose le chunk comme il sera imprime.
 
@@ -121,12 +140,8 @@ def transform_a_plat(morceau, normale):
     les remet en position relative correcte dans le repere du chunk courant.
     """
     rot = trimesh.geometry.align_vectors(normale, [0, 0, 1])
-    sonde = morceau.copy()
-    sonde.apply_transform(rot)
-    centre = sonde.bounds.mean(axis=0)
-    dep = trimesh.transformations.translation_matrix(
-        (-centre[0], -centre[1], -sonde.bounds[0][2]))
-    return dep @ rot
+    d = decalage_a_plat(morceau, normale)
+    return trimesh.transformations.translation_matrix(-d) @ rot
 
 
 def poser_a_plat(morceau, normale):

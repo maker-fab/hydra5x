@@ -40,7 +40,8 @@ import numpy as np
 import trimesh
 
 sys.path.insert(0, str(Path(__file__).parent))
-from export_chunks import decouper, poser_a_plat, spherical_to_normal  # noqa: E402
+from export_chunks import (decalage_a_plat, decouper, poser_a_plat,  # noqa: E402
+                           spherical_to_normal)
 import cinematique_3points as c3  # noqa: E402
 
 AB_FEEDRATE = 25.0          # deg/s, comme Cortex
@@ -167,6 +168,47 @@ def epilogue_3points(poses, vitesses):
              "G0 F1800 Z60"]
             + lignes_verins(poses[-1], v)
             + ["M104 S0", "M140 S0", "M84"])
+
+
+def decalages(chunks, directions):
+    """Decalage machine de chaque chunk, relatif au chunk 0.
+
+    Poser un chunk a plat le recentre en XY et pose son plan de coupe a
+    z=0 -- une translation **differente pour chaque chunk**. Les G-code qui
+    en sortent sont donc chacun dans leur propre repere, et empiles tels
+    quels ils ne se posent pas les uns sur les autres.
+
+    Incliner le plateau est l'operation inverse de poser a plat : il ne
+    reste donc que cette translation a remettre. On la prend relative au
+    chunk 0, qui garde la position que le slicer lui a donnee.
+
+    Sur la piece en Y, symetrique et centree, ces decalages valent zero --
+    ce qui explique qu'ils n'aient pas manque jusqu'ici.
+    """
+    d0 = None
+    sortie = []
+    for morceau, direction in zip(chunks, directions):
+        if morceau is None:
+            sortie.append(None)
+            continue
+        d = decalage_a_plat(morceau, spherical_to_normal(*direction))
+        if d0 is None:
+            d0 = d
+        sortie.append(d - d0)
+    return sortie
+
+
+def ligne_decalage(d):
+    """Commande Klipper qui deplace le repere, sans toucher aux trajets.
+
+    Corriger les milliers de coordonnees du chunk donnerait le meme
+    resultat pour beaucoup plus de risque ; un decalage de repere est une
+    ligne, et il reste lisible dans le G-code.
+    """
+    if d is None or np.allclose(d, 0.0, atol=1e-6):
+        return ["; decalage nul pour ce chunk"]
+    return [f"SET_GCODE_OFFSET X={d[0]:.4f} Y={d[1]:.4f} Z={d[2]:.4f} MOVE=0"
+            " ; remet le chunk dans le repere du chunk 0"]
 
 
 def options_prusa(couche, premier_chunk):
@@ -343,6 +385,7 @@ def main():
     departs = [[0.0, 0.0, 0.0], [0.0, 0.0, 28.0], [0.0, 0.0, 28.0]]
 
     chunks = decouper(piece, directions, departs)
+    decal = decalages(chunks, directions)
     trois = args.machine == "3points"
     if trois:
         poses = hauteurs_chunks(directions, args.rayon, args.z_plateau)
@@ -387,6 +430,7 @@ def main():
             cy = (bornes[0][1] + bornes[1][1]) / 2.0
             sortie.append(f"; HYDRA5X_REPERE chunk={k} cx={cx:.4f} cy={cy:.4f}"
                           " ; centre XY du maillage, pour le test de collision")
+            sortie += ligne_decalage(decal[k])
             sortie.append(f"; ---- chunk {k} : {len(corps)} lignes ----")
             if k > 0:
                 sortie += approche(corps, HAUTEUR_REPRISE)
