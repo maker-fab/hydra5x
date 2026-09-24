@@ -62,6 +62,7 @@ confirmer ce que `B` incline sur sa machine, plateau ou tête.
 | Table 3 points parallèle | proposition | Z + basculement tout azimut sur trois actionneurs ; supprime le berceau | **à évaluer** — voir architecture-v2.md |
 | Changeur multi-hotends | Archer, multipoleguy — [multipoledynamics.com](https://multipoledynamics.com/hardware) | quatre outils sur connecteurs rapides, électriques ET filament ; RepRapFirmware détecte le nombre d'outils et reconfigure l'interface | **écarté pour l'instant** — hors périmètre tant que la cinématique n'est pas figée, mais l'idée du connecteur rapide filament est à garder |
 | **Plateau « Multipole »** | Archer, [Hardware](https://multipoledynamics.com/hardware) | plateau dont l'orientation change **en continu**, sur un CoreXY ordinaire, volume 300×300×350. Pas de berceau basculant visible | **à évaluer** — confirme que la voie « plateau orientable sans berceau » est tenue par quelqu'un d'autre ; **cinématique non publiée**, aucune CAO, rien à copier |
+| **Changeur d'outil DAKSH V2** | [ankurv2k6/daksh-toolchanger-v2](https://github.com/ankurv2k6/daksh-toolchanger-v2), 337 ★ | changeur **entierement imprime**, aucune piece usinee, verrouillage mecanique sans servo inspire de la Prusa XL. Moins de 4 s par changement, calibration XYZ automatique entre outils, config et macros Klipper fournies. **Compatible Voron Trident** -- exactement la base retenue en D23 | **a evaluer serieusement** — mais licence contradictoire, voir ci-dessous |
 | Embase sacrificielle 9 mm | ce projet | supprime la contrainte des premiers millimètres | **retenu** |
 
 ## Logiciel
@@ -83,6 +84,19 @@ C'est la même conclusion qu'ici, obtenue autrement : la mécanique existe
 déjà (Fractal, Core R-Theta, Rep5x, tous publiés), c'est le tranchage qui
 manque. Différence de méthode : eux écrivent un slicer neuf et fermé, on
 part d'un existant libre.
+
+**Reserve de licence sur DAKSH V2** : le depot declare **CC0-1.0** (domaine
+public, aucune restriction) alors que son README ecrit « can be used freely
+for **non commercial** purposes ». Les deux ne peuvent pas etre vrais. Tant
+que ce n'est pas leve par l'auteur, **on ne peut pas integrer ces fichiers**
+dans un projet publie sous GPL-3.0 / CERN-OHL-S : une clause non commerciale
+est incompatible avec les deux. L'idee reste libre a reprendre, les fichiers
+non.
+
+**Reserve technique** : DAKSH V2 s'appuie sur un **Z quadri-courroie**,
+donc un plateau sur QUATRE points. Notre table basculante en demande
+exactement trois. Le changeur lui-meme est cote TETE et se moque de ce que
+fait le plateau (D20) -- c'est la partie a reprendre. Le systeme Z, non.
 
 ---
 

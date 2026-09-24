@@ -1410,6 +1410,73 @@ et la premiere couche.
 
 ---
 
+## D24 — Plateau 400, hauteur 400 : ce que la marge coute vraiment
+
+Choix : **plateau 400 x 400, hauteur 400.** Prendre de la marge plutot que
+de dimensionner au plus juste. Ce que ca donne, et la contrainte que ca
+cree.
+
+### Ce qu'on imprime
+
+Cadre X400 Y400 Z400, plateau carre 400, piece cylindrique :
+
+| inclinaison | piece | volume |
+|---|---|---|
+| 0° | Ø400 x 400 | 50,27 L |
+| 15° | Ø328 x 320 | 27,04 L |
+| 25° | Ø304 x 294 | 21,34 L |
+| **35°** | **Ø320 x 240** | **19,30 L** |
+| 40° | Ø332 x 226 | 19,56 L |
+
+Environ **Ø300 x 250 utiles a pleine inclinaison**. C'est une vraie
+machine, pas un demonstrateur de table.
+
+### La contrainte que le grand plateau cree
+
+**Plus le plateau est grand, plus l'inclinaison coute cher en course
+lineaire.** La portee des appuis croit avec le rayon, et la course
+differentielle croit avec la portee :
+
+| rayon des appuis | porte-a-faux du plateau | portee | 30° | **35°** | 40° |
+|---|---|---|---|---|---|
+| 200 mm (au bord) | 83 mm | 346 mm | 200 mm | **243 mm** | 291 mm |
+| 175 mm | 108 mm | 303 mm | 175 mm | 212 mm | 254 mm |
+| **150 mm** | **133 mm** | **260 mm** | 150 mm | **182 mm** | 218 mm |
+| 125 mm | 158 mm | 217 mm | 125 mm | 152 mm | 182 mm |
+| 100 mm | 183 mm | 173 mm | 100 mm | 121 mm | 145 mm |
+
+**C'est le nouvel arbitrage, et il n'existait pas sur un plateau de 250.**
+Rapprocher les appuis du centre divise la course differentielle par deux --
+mais met le plateau en porte-a-faux. Un plateau de 400 sur des appuis a
+R=125 deborde de 158 mm a ses coins ; avec 2 kg de piece dessus, la fleche
+n'est plus negligeable a l'echelle d'une couche.
+
+**Retenu : appuis a R=150 mm**, 182 mm de course differentielle pour 35°,
+133 mm de porte-a-faux. Le levier pour tenir la fleche est l'**epaisseur et
+le nervurage du plateau**, pas le rayon des appuis.
+
+### Ce que ca fait a la hauteur de la machine
+
+La course differentielle s'ajoute a la course d'impression sur chaque vis :
+
+    course d'une vis = 400 (impression) + 182 (differentiel) = 582 mm
+
+Plus la plongee du coin du plateau a 35° -- **162 mm** pour un carre de
+400 -- qui doit etre libre sous le plateau. Plus le plateau, le portique,
+l'embase.
+
+**Le bati approche 1 000 mm de haut.** C'est la consequence directe du
+choix 400/400, et il vaut mieux la voir maintenant qu'au moment de
+commander les profiles. Ce n'est pas redhibitoire -- une Voron 2.4 350 fait
+deja 800 mm -- mais ca change la classe de machine, le transport, et la
+rigidite a obtenir.
+
+### Ce qui reste inchange
+
+Tout le raisonnement de D23. Le plateau grandit, la cinematique non.
+
+---
+
 ## Erreurs commises — pour ne pas les refaire
 
 Le schéma est constant : **le raisonnement géométrique et logique a tenu,
