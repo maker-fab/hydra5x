@@ -38,6 +38,53 @@ def hauteurs(theta_deg, phi_deg, z, rayon):
             * np.tan(np.radians(theta_deg)))
 
 
+def hauteurs_normale(normale, z, rayon):
+    """Hauteurs des verins pour un plateau de normale donnee.
+
+    Formulation sans convention d'azimut, donc sans piege de signe : un
+    plan de normale `m` passant par (0, 0, z) a pour hauteur, au point
+    horizontal `p`,
+
+        h(p) = z - (m_x.p_x + m_y.p_y) / m_z
+    """
+    m = np.asarray(normale, dtype=float)
+    m = m / np.linalg.norm(m) * np.sign(m[2])
+    a = np.radians(np.array(AZIMUTS_VERINS))
+    px, py = rayon * np.cos(a), rayon * np.sin(a)
+    return z - (m[0] * px + m[1] * py) / m[2]
+
+
+def normale_plateau(theta_deg, phi_deg):
+    """Normale que le PLATEAU doit prendre pour imprimer ce chunk.
+
+    Cortex designe une direction de tranchage par `spherical_to_normal` :
+    n = (sin.cos, sin.sin, cos) dans le repere de la piece. Imprimer ce
+    chunk demande que **n devienne verticale** une fois la piece inclinee
+    avec le plateau. La rotation qui amene n sur +Z tourne de theta autour
+    de l'axe n x Z ; la normale du plateau est l'image de +Z par cette
+    meme rotation.
+
+    Verifie ici meme : on applique la rotation a n et on controle qu'elle
+    tombe bien sur +Z. Si la convention amont change, ce controle le dit
+    au lieu de produire des angles faux.
+    """
+    t, p = np.radians(theta_deg), np.radians(phi_deg)
+    n = np.array([np.sin(t) * np.cos(p), np.sin(t) * np.sin(p), np.cos(t)])
+    axe = np.array([np.sin(p), -np.cos(p), 0.0])
+    if np.linalg.norm(axe) < 1e-12:
+        axe = np.array([1.0, 0.0, 0.0])
+    c, s = np.cos(t), np.sin(t)
+    k = np.array([[0.0, -axe[2], axe[1]],
+                  [axe[2], 0.0, -axe[0]],
+                  [-axe[1], axe[0], 0.0]])
+    m = np.eye(3) + s * k + (1 - c) * (k @ k)
+    ecart = float(np.linalg.norm(m @ n - np.array([0.0, 0.0, 1.0])))
+    if ecart > 1e-9:
+        raise ValueError(f"la rotation ne ramene pas la normale sur +Z "
+                         f"(ecart {ecart:.3e}) : convention d'angles a revoir")
+    return m @ np.array([0.0, 0.0, 1.0])
+
+
 def pose(h, rayon):
     """Trois hauteurs -> (theta, phi, z). Reciproque exacte de `hauteurs`."""
     a = np.radians(np.array(AZIMUTS_VERINS))

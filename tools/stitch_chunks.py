@@ -21,6 +21,13 @@ Le point delicat n'est pas la rotation, c'est ce qui l'entoure :
 
 Convention d'angles, relevee dans slicing_functions.py et verifiee contre
 le G-code de reference : A = 90 - phi, B = theta, chunk 0 force a l'origine.
+
+**Deux machines** (`--machine`). Le berceau a deux axes de Cortex, et la
+table basculante a trois verins retenue en D23. Le changement est une
+**substitution de sortie** : les trajets sont identiques au caractere pres,
+seules les commandes machine du bloc de reorientation changent. Verifie par
+diff, et par `check_collision.py` qui rend le meme verdict sur les deux --
+ce qui est attendu, la collision ne dependant que de la pose relative.
 """
 import argparse
 import re
@@ -34,8 +41,11 @@ import trimesh
 
 sys.path.insert(0, str(Path(__file__).parent))
 from export_chunks import decouper, poser_a_plat, spherical_to_normal  # noqa: E402
+import cinematique_3points as c3  # noqa: E402
 
 AB_FEEDRATE = 25.0          # deg/s, comme Cortex
+Z_FEEDRATE = 10.0           # mm/s, vitesse du verin le plus sollicite
+VERINS = ("stepper_z1", "stepper_z2", "stepper_z3")
 DEGAGEMENT_Z = 10.0         # mm au-dessus de la buse avant rotation
 PARKING = (0.0, -175.0)     # position de degagement de la tete
 HAUTEUR_REPRISE = 30.0      # mm de garde en arrivant sur un nouveau chunk
@@ -66,6 +76,97 @@ def vitesses_ab(a, b):
 def non_nulle(v):
     """Une vitesse nulle est refusee par Klipper : replier sur la consigne."""
     return v if round(v, 5) != 0 else AB_FEEDRATE
+
+
+def hauteurs_chunks(directions, rayon, z):
+    """Hauteurs des trois verins par chunk, table basculante a trois points.
+
+    Meme role que `angles_ab` pour le berceau : une pose de plateau par
+    chunk, plus un retour a l'horizontale en queue. La conversion passe
+    par la normale, pas par un couple d'angles -- voir
+    `cinematique_3points.normale_plateau`, qui verifie la convention au
+    lieu de la supposer.
+    """
+    poses = [np.full(3, z)]
+    for theta, phi in directions[1:]:
+        poses.append(c3.hauteurs_normale(c3.normale_plateau(theta, phi),
+                                         z, rayon))
+    poses.append(np.full(3, z))
+    return poses
+
+
+def vitesses_verins(poses):
+    """Vitesses par verin, pour qu'ils arrivent ensemble.
+
+    Le verin qui parcourt le plus grand ecart prend la consigne, les
+    autres sont proportionnels. Un verin immobile n'est pas commande du
+    tout -- une vitesse nulle serait refusee par Klipper.
+    """
+    vitesses = [np.full(3, Z_FEEDRATE)]
+    for k in range(1, len(poses)):
+        d = np.abs(poses[k] - poses[k - 1])
+        pire = d.max()
+        vitesses.append(np.full(3, Z_FEEDRATE) if pire < 1e-9
+                        else Z_FEEDRATE * d / pire)
+    return vitesses
+
+
+def bloc_rotation_3points(k, poses, vitesses, z_courant, course_diff):
+    """Degagement puis basculement du plateau sur ses trois verins."""
+    if k == 0:
+        return []
+    d = poses[k] - poses[k - 1]
+    etendue = float(poses[k].max() - poses[k].min())
+    if etendue > course_diff + 1e-6:
+        raise ValueError(
+            f"chunk {k} : {etendue:.1f} mm d'ecart entre verins demandes, "
+            f"course differentielle disponible {course_diff:.1f} mm")
+
+    lignes = [f"; ---- chunk {k} : basculement du plateau ----",
+              f"G0 F1800 Z{z_courant + DEGAGEMENT_Z:.3f} ; degager Z avant bascule",
+              f"G0 X{PARKING[0]} Y{PARKING[1]} ; ecarter la tete",
+              f"; ecart entre verins : {etendue:.2f} mm sur {course_diff:.0f} "
+              "disponibles"]
+    lignes += lignes_verins(poses[k], np.where(np.abs(d) > 1e-6,
+                                              vitesses[k], 0.0))
+    lignes += [
+        "; basculement termine",
+        "G92 E0 ; l'axe E repart de zero pour ce chunk",
+        f"G0 F1800 Z{HAUTEUR_REPRISE:.3f} ; garde avant approche",
+    ]
+    return lignes
+
+
+def non_nulle_z(v):
+    """Comme `non_nulle`, mais en mm/s : la consigne des verins, pas celle
+    des axes rotatifs. Replier sur AB_FEEDRATE donnerait 25 mm/s au lieu
+    de 25 deg/s -- une unite pour une autre."""
+    return v if round(v, 5) != 0 else Z_FEEDRATE
+
+
+def lignes_verins(cible, vitesse):
+    """Commandes MANUAL_STEPPER pour les verins qui doivent bouger.
+
+    Un verin deja en place n'est pas commande. Le dernier commande porte
+    SYNC=1 pour que le bloc se termine quand le mouvement est fini.
+    """
+    bouge = [i for i in range(len(VERINS)) if abs(vitesse[i]) > 1e-9]
+    if not bouge:
+        return ["; verins deja en place"]
+    return [f"MANUAL_STEPPER STEPPER={VERINS[i]} MOVE={cible[i]:.5f} "
+            f"SPEED={non_nulle_z(vitesse[i]):.5f} "
+            f"SYNC={1 if i == bouge[-1] else 0}" for i in bouge]
+
+
+def epilogue_3points(poses, vitesses):
+    d = np.abs(poses[-1] - poses[-2])
+    pire = d.max()
+    v = np.zeros(3) if pire < 1e-9 else Z_FEEDRATE * d / pire
+    return (["; ---- fin ----",
+             "G1 F2400 E-5 ; retraction finale",
+             "G0 F1800 Z60"]
+            + lignes_verins(poses[-1], v)
+            + ["M104 S0", "M140 S0", "M84"])
 
 
 def options_prusa(couche, premier_chunk):
@@ -224,6 +325,16 @@ def main():
     ap.add_argument("--out", type=Path, default=Path("results/gcode/y_cousu.gcode"))
     ap.add_argument("--couche", type=float, default=0.2)
     ap.add_argument("--angle", type=float, default=30.0)
+    ap.add_argument("--machine", choices=("berceau", "3points"),
+                    default="berceau",
+                    help="berceau a deux axes (protocole Cortex) ou table "
+                         "basculante a trois verins (D23)")
+    ap.add_argument("--rayon", type=float, default=150.0,
+                    help="rayon du cercle des trois verins, mm")
+    ap.add_argument("--z-plateau", type=float, default=200.0,
+                    help="hauteur de reference du centre du plateau, mm")
+    ap.add_argument("--course-diff", type=float, default=210.0,
+                    help="course differentielle disponible, mm")
     args = ap.parse_args()
 
     from test_slice import make_y_part
@@ -232,12 +343,24 @@ def main():
     departs = [[0.0, 0.0, 0.0], [0.0, 0.0, 28.0], [0.0, 0.0, 28.0]]
 
     chunks = decouper(piece, directions, departs)
-    a, b = angles_ab(directions)
-    va, vb = vitesses_ab(a, b)
+    trois = args.machine == "3points"
+    if trois:
+        poses = hauteurs_chunks(directions, args.rayon, args.z_plateau)
+        vitesses = vitesses_verins(poses)
+        a = b = va = vb = None
+    else:
+        a, b = angles_ab(directions)
+        va, vb = vitesses_ab(a, b)
     print(f"Piece en Y : {len(piece.faces)} faces, {piece.volume:.1f} mm3")
+    print(f"Machine : {args.machine}")
     for k in range(len(directions)):
-        print(f"  chunk {k} : A={a[k]:7.1f} deg  B={b[k]:6.1f} deg"
-              f"   vitesses {va[k]:6.2f} / {vb[k]:6.2f}")
+        if trois:
+            h = poses[k]
+            print(f"  chunk {k} : verins {h[0]:7.2f} {h[1]:7.2f} {h[2]:7.2f} mm"
+                  f"   ecart {h.max()-h.min():6.2f} mm")
+        else:
+            print(f"  chunk {k} : A={a[k]:7.1f} deg  B={b[k]:6.1f} deg"
+                  f"   vitesses {va[k]:6.2f} / {vb[k]:6.2f}")
 
     sortie = [l for l in prologue(args.couche, 210, 60)]
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -253,7 +376,10 @@ def main():
             g = trancher(args.prusa, stl, Path(tmp) / f"c{k}.gcode",
                          args.couche, premier_chunk=(k == 0))
             corps = corps_utile(g)
-            sortie += bloc_rotation(k, a, b, va, vb, z_max(sortie))
+            sortie += (bloc_rotation_3points(k, poses, vitesses,
+                                             z_max(sortie), args.course_diff)
+                       if trois else
+                       bloc_rotation(k, a, b, va, vb, z_max(sortie)))
             # NE PAS nommer cette variable `b` : elle ecraserait la liste
             # des angles B utilisee par le chunk suivant.
             bornes = pose.bounds
@@ -268,7 +394,8 @@ def main():
             print(f"  chunk {k} : {len(corps)} lignes de trajets, "
                   f"Z max {z_max(corps):.2f} mm")
 
-    sortie += epilogue(va, vb)
+    sortie += (epilogue_3points(poses, vitesses) if trois
+               else epilogue(va, vb))
     args.out.write_text("\n".join(sortie) + "\n")
     print(f"\n  {args.out}  {len(sortie)} lignes, "
           f"{args.out.stat().st_size/1024:.1f} Ko")
