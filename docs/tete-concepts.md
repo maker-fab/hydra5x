@@ -207,3 +207,54 @@ chercher de plus.
 **Le piège** : les produits vendus « Matte » sont presque toujours du
 **PLA**. Service 50 °C, contre 50-60 °C en caisson et 80-100 °C contre le
 bloc. Disqualifié ici, quelle que soit sa finition.
+
+### Les types de fibre de carbone
+
+Trois distinctions, dont une seule change vraiment quelque chose.
+
+**Par la forme de la fibre — c'est la distinction décisive.**
+
+| forme | longueur | ce qu'elle apporte |
+|---|---|---|
+| broyée (*milled*) | 50-150 µm | **charge**, rien de structurel : couleur, aspect mat, retrait réduit |
+| **coupée courte** (*chopped*) | 100-400 µm | raideur ×2-3, dilatation divisée par 2-3. **Pas de gain de résistance** |
+| continue (*continuous*) | le fil entier | résistance réelle, classe aluminium dans le sens des fibres |
+
+Tout ce qui se vend en bobine « CF » est **coupé court**. La fibre continue
+demande une machine dédiée à double tête — Markforged, Anisoprint — et ne
+passe pas dans un hotend ordinaire.
+
+**Pourquoi le court ne renforce pas.** Une fibre ne porte de charge que si
+elle dépasse une *longueur critique*, en dessous de laquelle elle glisse
+dans la matrice au lieu de la tendre. À 200 µm on est sous ce seuil pour
+la plupart des matrices. D'où le comportement bien connu : **plus raide,
+pas plus résistant, et nettement plus cassant** — surtout entre couches,
+où les fibres, orientées par l'extrusion, ne traversent pas l'interface.
+
+C'est exactement ce que mesure la colonne « choc » du tableau : 0,35 pour
+l'ASA-CF contre 1,00 pour l'ASA nu.
+
+**Par le taux de charge.** 10 à 15 % dans les filaments courants, 20 à
+30 % en industriel. Au-delà de ~20 % la filabilité s'effondre — filament
+cassant en bobine, buse qui bouche.
+
+**Piège commercial** : certains filaments « carbone » ne sont que du noir
+de carbone ou de la poudre, sans renfort. Si la fiche technique ne donne
+pas le taux de charge, c'est décoratif.
+
+**Par la matrice**, qui fixe la température et la mise en œuvre :
+
+| | service | contrainte |
+|---|---|---|
+| PLA-CF | 50 °C | inutilisable ici |
+| PETG-CF | 72 °C | facile, peu de gauchissement |
+| **ASA-CF / ABS-CF** | **95 °C** | caisson |
+| PA6-CF | 130 °C | séchage impératif, 300 °C |
+| PC-CF | 125 °C | 300 °C, gauchit |
+| PPS-CF, PEEK-CF | 200 °C et + | hors portée d'une machine domestique |
+
+**Pour nos pièces** : la seule option réaliste est du coupé court dans une
+matrice ASA. Et comme le gain est en raideur et en dilatation — non en
+résistance — pendant que le coût est en fragilité et en conductivité,
+**le verre reste le meilleur choix** partout sauf là où la dilatation
+prime.
