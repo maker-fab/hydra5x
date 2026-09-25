@@ -1983,7 +1983,7 @@ Ces deux-la sont bornes et connus. L'inertie du plateau ne l'est pas.
 
 ---
 
-## D30 — Ligne conductrice : la piece ne bouge jamais
+## D30 — Ligne conductrice : la piece ne bouge jamais  ⟨REPORTEE EN v2 PAR D32⟩
 
 Assez compare. Voici la ligne, et tout le reste s'y range.
 
@@ -2164,6 +2164,112 @@ cordon de la peau -- attendu, et c'est le signe que l'echelle est juste.
 
 Le point 1 de D30 est clos. Reste la platine a dessiner, sa raideur a
 verifier, et la chaine continue.
+
+---
+
+## D32 — v1 : plateau qui s'incline, tete standard, changeur standard
+
+Proposition : **plateau basculant, tete fixe ordinaire, changeur
+multi-outils du commerce.** Rien d'autre.
+
+Elle est meilleure que D30 pour une v1, et la comparaison que j'avais
+faite etait biaisee.
+
+### Le biais qu'il faut corriger d'abord
+
+J'ai repete que faire basculer la piece coute « 60 a 77 % du volume ».
+C'est vrai **a cadre fige**, et c'est la mauvaise facon de poser la
+question -- l'utilisateur l'avait deja signale une fois, et j'avais
+corrige pour la hauteur sans refaire la comparaison de volume.
+
+Machine contre machine, a piece comparable :
+
+| | cadre | piece utile | volume |
+|---|---|---|---|
+| plateau basculant, 4 outils, 30° | 400 x 400, **~1 m de haut** | Ø264 x 222 | **12,15 L** |
+| platine de tete, 35° | **425 x 425**, ~520 de haut | Ø200 x 400 | **12,53 L** |
+
+**Les deux donnent le meme volume utile.** L'une est haute et etroite,
+l'autre large et basse. Le « 60 a 77 % » ne departage rien : il mesurait
+une perte dans un cadre qu'on est libre d'agrandir.
+
+### Ce que la proposition gagne, et c'est enorme
+
+**Tout existe.** C'est le seul argument qui compte pour une v1, et il est
+ecrasant :
+
+| brique | etat |
+|---|---|
+| base mecanique | Voron Trident -- CoreXY a trois moteurs Z sous le plateau, produit en masse |
+| changeur d'outil | **DAKSH V2** -- entierement imprime, aucune piece usinee, < 4 s, calibration XYZ automatique, macros Klipper fournies |
+| tete | **une tete standard**. Stealthburner, Dragon, Rapido. Rien a inventer |
+| cinematique plateau | ecrite et testee ici : `cinematique_3points.py`, 12/12 |
+| sortie G-code | ecrite et testee ici : `stitch_chunks.py --machine 3points` |
+| firmware | Klipper, config Fractal en reference |
+
+**En face, la platine de D30 n'existe nulle part** : platine, cardan
+central, passage du filament dans l'axe du joint, actionneurs a 136 µm
+sans jeu. Tout a dessiner, tout a valider, sans atelier.
+
+### Ce que la proposition supprime comme problemes
+
+- **la transposition du repere** (D31) devient inutile -- incliner le
+  plateau defait exactement la mise a plat ;
+- **la compensation du point pilote** disparait ;
+- **la chaine de tolerance sur un axe de bascule embarque** disparait ;
+- **le filament ne traverse aucune articulation** ;
+- le changeur d'outil est **indifferent**, puisque la tete ne s'incline
+  pas -- c'est un changeur 3 axes ordinaire, ce que DAKSH est.
+
+### Ce qu'elle coute, honnetement
+
+1. **Un bati d'environ un metre** : 400 d'impression + 210 de course
+   differentielle + 141 de plongee du plateau. C'est le vrai prix, et il
+   est en encombrement d'atelier, pas en capacite.
+2. **La bande passante en bascule.** 6,5 kg sur 260 mm d'envergure contre
+   1,5 kg sur 87 : l'inertie est ~39 fois plus grande. Le non-planaire
+   continu resterait possible -- les machines-outils tournent bien des
+   tables lourdes -- mais **lentement**. Dire que ca l'interdit etait trop
+   fort ; dire que ca le bride est juste.
+3. **L'alimentation du plateau chauffant a travers la bague tournante.**
+   Probleme resolu chez Fractal et Rep5x, pour quelques euros.
+4. **31,2° garantis** au pire azimut avec 210 mm de course, au lieu des 35
+   vises. Soit on accepte, soit on passe a 250 mm de course.
+
+### Ce que ca change au perimetre, et il faut le dire
+
+Une machine en indexe livre ce que D11 et D12 ont mesure : **17 % de
+matiere et la suppression des supports. Zero gain de resistance.** Les 2 a
+3x de D14 exigent le tranchage continu, qui est de toute facon bloque
+ailleurs -- S4 sur notre piece bute encore sur le plancher TetGen.
+
+**D1 dit que ce projet est un demonstrateur, assume.** Un demonstrateur se
+construit. La platine est une machine de recherche ; le plateau basculant
+est une machine.
+
+### Decision
+
+**v1 : plateau basculant a trois points, tete standard, changeur DAKSH.**
+D30 n'est pas annulee, elle est **reportee en v2** -- et rien de ce qui a
+ete ecrit pour elle n'est perdu :
+
+- `--machine platine` et `repere_machine.py` restent dans la chaine,
+  testes, a cote de `--machine 3points` ;
+- `cad/tetes.py` et la mesure des quatre concepts restent le point de
+  depart de la v2 ;
+- le contrat machine est **un commutateur**. Passer de l'une a l'autre,
+  c'est changer un argument de ligne de commande.
+
+C'est exactement ce que le commutateur etait cense permettre : ne pas
+avoir a choisir une fois pour toutes.
+
+### Le point a reverifier avant d'acheter
+
+DAKSH V2 s'appuie sur un **Z quadri-courroie**, donc un plateau a quatre
+points. Notre bascule en demande trois. **On reprend le changeur, cote
+tete ; pas son systeme Z.** Et sa licence est contradictoire -- CC0
+declare, « non commercial » ecrit dans le README : a faire trancher par
+l'auteur avant d'integrer ses fichiers dans un depot GPL / CERN-OHL-S.
 
 ---
 
