@@ -2,15 +2,23 @@
 
 # HYDRA5X
 
-**Chaîne logicielle pour imprimante FDM 5 axes à plateau rotatif-inclinable
-(TRT).** Linux, macOS, Windows.
+**Imprimante FDM 5 axes, et la chaîne logicielle qui va avec.** Linux,
+macOS, Windows.
 
-Fractal fournit la mécanique. HYDRA5X fournit ce qui manquait autour : les
-dépendances réelles, le slicer réparé sous Linux, l'enveloppe angulaire
-mesurée, les profils DXF pour devis.
+La ligne : **la pièce ne bouge jamais.** Le plateau reste fixe, plat et
+chauffant ; c'est une platine inclinable sur la tête qui donne les deux
+degrés d'orientation. Faire basculer la pièce coûterait 60 à 77 % du
+volume utile et enfermerait la machine dans le tranchage par blocs.
 
-**État : chaîne logicielle validée, machine non construite.** Tout ce qui
-suit a été établi sans matériel — par lecture de code, calcul et exécution.
+→ **[docs/machine.md](docs/machine.md)** — la machine en une page, chaque
+cote reliée à la mesure qui la porte.
+→ [docs/decisions.md](docs/decisions.md) — le journal : les revirements,
+les erreurs et leurs raisons.
+
+**État : chaîne logicielle validée et testée, machine non construite.**
+Tout ce qui suit a été établi sans matériel — par lecture de code, calcul
+et exécution. Le fork du slicer, la cinématique, la transposition du
+G-code et le test de collision tournent ; la platine n'est pas dessinée.
 
 **Démarrer** : [`docs/install.md`](docs/install.md) — de zéro au premier
 G-code en 15 minutes, avec la valeur attendue à chaque étape. Les mesures
