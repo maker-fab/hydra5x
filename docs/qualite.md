@@ -9,26 +9,74 @@ de finition.
 
 ---
 
-## 1. Le levier principal : ne pas imprimer ce qui doit être usiné
+## 1. Tout imprimer — et que ça se voie
 
-C'est ce qui sépare une machine d'un prototype, avant toute question de
-couleur ou d'état de surface.
+**Correction d'une version précédente de ce fichier.** Elle exigeait de
+l'acier rectifié sur les portées de contact et présentait l'impression
+intégrale comme un plafond. C'était faux sur les deux plans :
 
-**Le plastique imprimé n'a pas sa place dans une liaison de référence.**
-Il flue sous charge maintenue, il se dilate trois fois plus que
-l'aluminium, et il s'use au contact répété.
+- **les 71 pièces de DAKSH sont imprimées et ça tourne** — 2000
+  changements d'outil sur leurs propres essais. Ce n'est pas une
+  hypothèse ;
+- une machine qui fabrique des machines **doit être faite par elle-même**.
+  C'est l'argument le plus fort qu'un projet FDM puisse tenir, et le
+  saboter avec des pièces tournées, c'est se priver de sa démonstration.
 
-| pièce | matière exigée | pourquoi |
-|---|---|---|
-| contacts de l'accouplement d'outil | **acier rectifié** | contact répété, c'est LA référence de position |
-| goupilles et portées de goupille | acier | 2000 cycles |
-| appuis du plateau basculant | acier ou alu usiné | ils portent la planéité |
-| support de rail linéaire | alu usiné ou profilé | la rectitude ne s'imprime pas |
-| structure, capots, guidage de câbles | **imprimé, sans réserve** | c'est là que l'impression excelle |
+Le bon raisonnement n'est pas *plastique ou métal*, c'est **quel polymère
+pour quelle sollicitation**. Les polymères techniques sont des matériaux
+de palier depuis cinquante ans ; le problème n'a jamais été le plastique,
+mais le mauvais plastique.
 
-DAKSH revendique « no machined parts required ». C'est son argument, et
-c'est aussi son plafond. **Remplacer les seules portées de contact par des
-inserts acier** est le meilleur rapport qualité/effort de tout le projet.
+### Les trois propriétés qui décident, et qui ne sont pas sur une fiche de traction
+
+| | pourquoi ça décide |
+|---|---|
+| **reprise d'humidité** | un PA6 qui gonfle de 1 % fait **1 mm sur 100**. Aucune répétabilité n'y survit. C'est le défaut des polyamides, et il est invisible sur un essai de traction |
+| **fluage** | une pièce sous précharge permanente — ressort de verrouillage, bossage d'insert — se déforme lentement à charge constante. L'ASA flue notablement dès 60 °C |
+| **usure** | au contact répété. Les polyamides et le PPS sont autolubrifiants |
+
+`tools/filaments.py` les porte désormais toutes les trois.
+
+### Ce que le croisement donne
+
+Un seul matériau figure dans **toutes** les listes de candidats :
+
+| poste | candidats |
+|---|---|
+| Gantry / Dock — portent les offsets | ASA-GF, PC-GF, **PPS-GF** |
+| ToolLock, corps — chocs et inserts | ASA-GF, PA12-GF, PC-GF, **PPS-GF** |
+| ToolLock, **contacts** — l'usure fait la référence | PA12-GF, **PPS-GF** |
+| Bossages sous précharge — fluage | PC-GF, **PPS-GF** |
+| Toolhead — isolant, près du bloc | ASA-GF, PC-GF, **PPS-GF** |
+
+**Le PPS-GF passe partout** : 0,03 % de reprise d'eau, fluage 0,12,
+usure 0,35, isolant, 200 °C de service, mat, teinte naturelle claire.
+C'est la réponse techniquement irréprochable, et elle est entièrement
+imprimée.
+
+Son prix : **320-340 °C de buse et un caisson à 90-120 °C**. Il faut une
+machine capable de l'imprimer.
+
+Le **PC-GF** est la version atteignable : il passe partout sauf sur
+l'usure (0,75). 290-310 °C, caisson à 60-70 °C, isolant, colorable, mat.
+
+### Le plan qui résout l'amorçage
+
+On ne peut pas imprimer du PPS avant d'avoir la machine qui l'imprime.
+D'où une construction en deux temps, qui **est** la démonstration :
+
+1. **Première monte en ASA-GF**, sur la Trident. Tout fonctionne, la
+   machine est juste née d'un matériau ordinaire.
+2. **Seconde monte en PPS-GF ou PC-GF**, imprimée **par la machine
+   elle-même** une fois qu'elle tourne en caisson chaud. On remplace les
+   pièces par poste, en mesurant à chaque fois les critères du §3.
+
+Une machine qui se réimprime dans un matériau meilleur que celui qui l'a
+vue naître : c'est exactement ce qu'une 5 axes FDM doit montrer, et aucune
+pièce tournée ne le dirait à sa place.
+
+**L'acier garde une seule place** : la visserie, les goupilles et les
+rails, qui sont des composants du commerce et non des pièces du projet.
 
 ---
 

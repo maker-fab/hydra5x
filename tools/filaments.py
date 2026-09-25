@@ -34,21 +34,38 @@ import argparse
 import sys
 
 # (CTE um/m/K, module GPa, tenacite relative a l'ASA, service continu °C,
-#  conducteur, couleurs disponibles, aspect)
+#  conducteur, couleurs, aspect, reprise d'humidite %, fluage relatif,
+#  usure relative -- plus bas = mieux pour les deux derniers)
+#
+# Les trois dernieres colonnes sont celles qui decident quand on veut TOUT
+# imprimer, et elles manquaient a la premiere version de cette table :
+#
+# - **reprise d'humidite** : un PA6 qui gonfle de 1 % fait 1 mm sur 100.
+#   Aucune repetabilite ne survit a ca. C'est LE defaut des polyamides, et
+#   il ne se voit pas sur une fiche de traction.
+# - **fluage** : une piece sous precharge permanente -- ressort de
+#   verrouillage, bossage d'insert -- se deforme lentement a charge
+#   constante. L'ASA flue notablement des 60 °C.
+# - **usure** : au contact repete. Les polyamides sont autolubrifiants,
+#   c'est leur qualite historique de materiau de palier.
 FILAMENTS = {
-    "ASA":        (90, 2.1, 1.00,  90, False, "toutes",      "semi-mat"),
-    "ASA mat":    (75, 2.0, 0.85,  90, False, "toutes",      "mat"),
-    "ASA-GF":     (50, 4.0, 0.55,  95, False, "claires",     "mat"),
-    "ASA-CF":     (35, 5.5, 0.35,  95, True,  "noir",        "mat"),
-    "ABS":        (90, 2.0, 0.95,  85, False, "toutes",      "semi-brillant"),
-    "PETG":       (70, 2.0, 0.90,  68, False, "toutes",      "brillant"),
-    "PETG-CF":    (30, 5.0, 0.30,  72, True,  "noir",        "mat"),
-    "PA6-GF":     (55, 5.0, 0.70, 120, False, "naturel",     "mat"),
-    "PA6-CF":     (40, 7.0, 0.45, 130, True,  "noir",        "mat"),
-    "PC":         (68, 2.3, 1.20, 120, False, "toutes",      "brillant"),
-    "PC-CF":      (25, 7.0, 0.40, 125, True,  "noir",        "mat"),
-    "PPS-CF":     (20, 9.0, 0.35, 200, True,  "noir",        "mat"),
-    "PLA mat":    (65, 3.5, 0.45,  50, False, "toutes",      "mat"),
+    "ASA":        (90, 2.1, 1.00,  90, False, "toutes",   "semi-mat",      0.4, 1.00, 1.00),
+    "ASA mat":    (75, 2.0, 0.85,  90, False, "toutes",   "mat",           0.4, 1.00, 1.00),
+    "ASA-GF":     (50, 4.0, 0.55,  95, False, "claires",  "mat",           0.4, 0.60, 0.85),
+    "ASA-CF":     (35, 5.5, 0.35,  95, True,  "noir",     "mat",           0.4, 0.50, 0.80),
+    "ABS":        (90, 2.0, 0.95,  85, False, "toutes",   "semi-brillant", 0.5, 1.10, 1.05),
+    "PETG":       (70, 2.0, 0.90,  68, False, "toutes",   "brillant",      0.3, 1.40, 0.95),
+    "PETG-CF":    (30, 5.0, 0.30,  72, True,  "noir",     "mat",           0.3, 0.90, 0.70),
+    "PA6-GF":     (55, 5.0, 0.70, 120, False, "naturel",  "mat",           3.0, 0.55, 0.35),
+    "PA6-CF":     (40, 7.0, 0.45, 130, True,  "noir",     "mat",           3.0, 0.45, 0.30),
+    "PA12-GF":    (60, 4.0, 0.85, 110, False, "naturel",  "mat",           0.8, 0.60, 0.30),
+    "PPA-GF":     (45, 6.0, 0.60, 150, False, "naturel",  "mat",           1.2, 0.35, 0.35),
+    "PC":         (68, 2.3, 1.20, 120, False, "toutes",   "brillant",      0.2, 0.30, 0.90),
+    "PC-GF":      (40, 5.0, 0.75, 125, False, "claires",  "mat",           0.2, 0.25, 0.75),
+    "PC-CF":      (25, 7.0, 0.40, 125, True,  "noir",     "mat",           0.2, 0.20, 0.70),
+    "PPS-GF":     (30, 7.0, 0.55, 200, False, "naturel",  "mat",           0.03, 0.15, 0.40),
+    "PPS-CF":     (20, 9.0, 0.35, 200, True,  "noir",     "mat",           0.03, 0.12, 0.35),
+    "PLA mat":    (65, 3.5, 0.45,  50, False, "toutes",   "mat",           0.3, 2.50, 1.60),
 }
 
 REFERENCE = ("alu 6061", 23)
@@ -61,12 +78,16 @@ def derive(cte, longueur_mm, delta_k):
 
 # Ce que chaque poste exige vraiment, dans l'ordre.
 POSTES = {
-    "Gantry / Dock": ("portent les offsets d'outil",
-                      ["derive faible", "gauchissement faible"]),
-    "ToolLock":      ("2000 chocs, 9 inserts M3 sous charge",
-                      ["tenacite", "tenue des inserts"]),
-    "Toolhead":      ("carte, nappes, capteur, LED, contre le bloc chaud",
-                      ["isolant electrique", "service > 85 °C"]),
+    "Gantry / Dock":      ("portent les offsets d'outil",
+                           ["derive faible", "gauchissement faible"]),
+    "ToolLock, corps":    ("2000 chocs, 9 inserts M3 sous charge",
+                           ["tenacite", "tenue des inserts"]),
+    "ToolLock, contacts": ("le contact repete qui FAIT la reference",
+                           ["usure faible"]),
+    "Bossages sous precharge": ("ressorts, inserts charges en permanence",
+                                ["fluage faible"]),
+    "Toolhead":           ("carte, nappes, capteur, LED, contre le bloc",
+                           ["isolant electrique", "service > 85 °C"]),
 }
 
 
@@ -85,31 +106,43 @@ def main():
 
     print(f"=== piece de {args.longueur:.0f} mm, caisson a "
           f"±{args.delta:.0f} K, tolerance {args.tolerance:.2f} mm ===\n")
-    print(f"  {'filament':<11s} {'derive':>8s} {'E':>6s} {'choc':>6s} "
-          f"{'service':>8s} {'elec':>6s} {'couleurs':>9s} {'aspect':>15s}")
-    for nom, (cte, e, choc, serv, cond, coul, aspect) in FILAMENTS.items():
+    print(f"  {'filament':<11s} {'derive':>8s} {'choc':>6s} {'humid.':>7s} "
+          f"{'fluage':>7s} {'usure':>6s} {'service':>8s} {'elec':>8s} "
+          f"{'couleurs':>9s}")
+    for nom, v in FILAMENTS.items():
+        cte, e, choc, serv, cond, coul, aspect, hum, flu, us = v
         d = derive(cte, args.longueur, args.delta)
         drapeaux = ""
         if d > args.tolerance:
             drapeaux += " derive"
         if serv < args.service:
             drapeaux += " chaud"
-        print(f"  {nom:<11s} {d:7.3f}  {e:5.1f} {choc:5.2f} {serv:7.0f}° "
-              f"{'CONDUIT' if cond else 'isolant':>7s} {coul:>9s} "
-              f"{aspect:>15s}{drapeaux}")
+        if hum >= 1.0:
+            drapeaux += " HUMIDITE"
+        print(f"  {nom:<11s} {d:7.3f} {choc:6.2f} {hum:6.1f}% {flu:7.2f} "
+              f"{us:6.2f} {serv:7.0f}° "
+              f"{'CONDUIT' if cond else 'isolant':>8s} {coul:>9s}{drapeaux}")
     nom, cte = REFERENCE
     print(f"  {nom:<11s} {derive(cte, args.longueur, args.delta):7.3f}"
           f"   (reference)")
 
     print(f"\n  « derive » : dilatation sur {args.longueur:.0f} mm pour "
           f"{args.delta:.0f} K. Marquee si elle depasse la tolerance.")
-    print(f"  « choc » : tenacite relative a l'ASA non charge.")
+    print(f"  « choc », « fluage », « usure » : relatifs a l'ASA non charge.")
+    print(f"  « humid. » : reprise d'eau a saturation. Au-dela de 1 %, la")
+    print(f"      piece gonfle plus que sa tolerance -- marque HUMIDITE.")
     print(f"  « chaud » : service continu sous {args.service:.0f} °C.\n")
 
     for poste, (quoi, exigences) in POSTES.items():
         print(f"  --- {poste} : {quoi}")
         print(f"      exige : {', '.join(exigences)}")
-        if "isolant electrique" in exigences:
+        if "usure faible" in exigences:
+            choix = [n for n, v in FILAMENTS.items()
+                     if v[9] <= 0.45 and v[7] < 1.0 and v[3] >= args.service]
+        elif "fluage faible" in exigences:
+            choix = [n for n, v in FILAMENTS.items()
+                     if v[8] <= 0.40 and v[7] < 1.0 and v[3] >= args.service]
+        elif "isolant electrique" in exigences:
             choix = [n for n, v in FILAMENTS.items()
                      if not v[4] and v[3] >= args.service]
         elif "tenacite" in exigences:
@@ -125,4 +158,5 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
 
