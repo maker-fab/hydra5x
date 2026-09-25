@@ -78,6 +78,57 @@ course de plus. **À reprendre si l'encombrement devient le point dur.**
 - **Le type d'actionneur** : vis, courroie, ou biellette poussée. La
   résolution de 136 µm pour 0,1° est atteignable par les trois ; le jeu,
   non — une vis trapézoïdale sans rattrapage ne tiendra pas.
-- **La forme du joint central** : cardan, rotule, ou lame flexible. Une
-  lame supprime le jeu mais borne l'angle.
+- **La forme du joint central** : cardan, rotule, ou lame flexible. Le
+  flexible est **écarté à 35°**, voir ci-dessous.
 - **Le passage du filament** à travers le joint central, qui occupe l'axe.
+
+## Le joint central : pourquoi pas une articulation flexible
+
+Une lame ou un col flexible supprime le jeu par construction — pas de
+contact glissant, donc rien à rattraper. C'est exactement ce que
+demandent les 0,1° admissibles. `tools/pivot_flexible.py` chiffre ce que
+ça coûte.
+
+La borne vient de la déformation de la matière, pas de la géométrie :
+
+    theta_max = epsilon_admissible x L / c
+
+`c` = rayon du col. Tout est dans le rapport longueur sur épaisseur, et
+le seul levier est la longueur.
+
+**Longueur libre nécessaire pour atteindre 35°**, en fatigue illimitée :
+
+| matériau | Ø1 mm | Ø2 mm | Ø3 mm |
+|---|---|---|---|
+| acier ressort | 102 mm | 204 mm | 305 mm |
+| béryllium-cuivre | 76 mm | 153 mm | 229 mm |
+| titane Gr5 | **51 mm** | 102 mm | 153 mm |
+
+**Le pivot doit tenir dans les 80 mm qui séparent la platine de la
+pointe.** Un col de 102 à 305 mm n'y entre pas. Seul le titane en Ø1
+passerait, à 51 mm — et il flambe à 138 N, soit 46 N utiles avec un
+coefficient 3. C'est le pivot qui encaisse l'effort de dépôt *et* le
+verrouillage d'outil.
+
+Ce qu'un col **qui tient dans 40 mm** donne réellement :
+
+| matériau | Ø1 | Ø1,5 | Ø2 |
+|---|---|---|---|
+| acier ressort | 13,8° | 9,2° | 6,9° |
+| titane Gr5 | **27,5°** | 18,3° | 13,8° |
+
+**Environ 14° pour un col robuste, 28° pour un col fragile.** Pas 35°.
+
+Le polypropylène atteint 35° en 12 mm — et flue sous charge permanente.
+Une charnière vivante n'est pas un pivot de précision.
+
+**Conséquence** : le joint central est un **cardan à roulements
+préchargés** ou une **rotule**, pas un flexible. Le flexible redeviendrait
+le bon choix si la cible d'inclinaison descendait vers 15° : un col titane
+Ø2 de 44 mm y suffit, sans jeu et sans entretien.
+
+Dernier point à ne pas oublier : **un pivot flexible rappelle toujours
+vers sa position neutre**. À 35° sur un col titane Ø2, il faut 535 N.mm
+en permanence, soit 12 N par actionneur à R45. Un entraînement
+irréversible — vis sans fin, vis trapézoïdale — encaisse ça sans
+consommer de courant. Une courroie, non.
