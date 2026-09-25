@@ -132,3 +132,78 @@ vers sa position neutre**. À 35° sur un col titane Ø2, il faut 535 N.mm
 en permanence, soit 12 N par actionneur à R45. Un entraînement
 irréversible — vis sans fin, vis trapézoïdale — encaisse ça sans
 consommer de courant. Une courroie, non.
+
+---
+
+## Filament des pièces imprimées
+
+`tools/filaments.py`. Le critère n'est pas la rigidité, c'est la **dérive
+thermique** : un changeur d'outil vit sur sa répétabilité, et les offsets
+sont étalonnés à une température donnée.
+
+### Ce que le calcul apprend d'abord
+
+Pièce de 100 mm, caisson variant de 40 K :
+
+| filament | dérive | choc | élec. | couleurs | aspect |
+|---|---|---|---|---|---|
+| ASA | 0,360 mm | 1,00 | isolant | toutes | semi-mat |
+| ASA-GF | 0,200 mm | 0,55 | **isolant** | **claires** | mat |
+| ASA-CF | 0,140 mm | 0,35 | **conduit** | noir | mat |
+| PC-CF | 0,100 mm | 0,40 | conduit | noir | mat |
+| *alu 6061* | *0,092 mm* | — | — | — | — |
+
+**Aucun plastique imprimé ne tient 0,10 mm sur 100 mm avec 40 K d'écart.
+L'aluminium lui-même y est à peine.** Le matériau ne peut donc pas porter
+seul la tolérance — c'est l'étalonnage automatique des offsets qui la
+porte, et DAKSH le fait à chaque changement.
+
+Ce qui compte n'est donc pas la dérive absolue mais **la dérive entre deux
+étalonnages**, soit ±10 K en régime établi :
+
+| filament | dérive à ±10 K |
+|---|---|
+| ASA | 0,090 mm |
+| **ASA-GF** | **0,050 mm** |
+| ASA-CF | 0,035 mm |
+| *alu 6061* | *0,023 mm* |
+
+À ce régime, **l'ASA-GF suffit largement**, et la question du CF ne se
+pose plus en ces termes.
+
+### GF plutôt que CF, et pour trois raisons
+
+1. **Le CF conduit l'électricité.** La tête porte une carte, des nappes,
+   un capteur et des LED. Les fibres affleurantes et la poussière de
+   ponçage créent des chemins de fuite. **La fibre de verre est
+   isolante.**
+2. **Le CF casse net.** Ténacité 0,35 contre 0,55 pour le GF et 1,00 pour
+   l'ASA nu. Le `ToolLock` encaisse 2000 chocs et porte 9 inserts M3 sous
+   charge : c'est de la ténacité qu'il lui faut.
+3. **Le CF n'existe qu'en noir.** Le GF se colore.
+
+### Par poste
+
+| dossier | filament | pourquoi |
+|---|---|---|
+| **Gantry**, **Dock** | **ASA-GF** | portent les offsets ; 0,05 mm à ±10 K, isolant, coloré, mat |
+| **ToolLock** | **ASA nu** ou ASA mat | ténacité et tenue des inserts priment |
+| **Toolhead** | **ASA-GF** | isolant obligatoire, proche du bloc |
+
+Le **PA6-GF** est la montée en gamme cohérente si le caisson dépasse
+90 °C : 120 °C de service, isolant, ténacité 0,70. Il exige un séchage
+sérieux — il reprend l'humidité en quelques heures.
+
+### Le mat
+
+Un filament « mat » est un filament **chargé** — microbilles minérales ou
+craie. Les mêmes charges réduisent le retrait, donc le gauchissement, et
+abrasent la buse. **Mat ou fibré, c'est la même contrainte : buse
+durcie.**
+
+L'ASA-GF est mat par construction. L'ASA nu est semi-mat. Il n'y a rien à
+chercher de plus.
+
+**Le piège** : les produits vendus « Matte » sont presque toujours du
+**PLA**. Service 50 °C, contre 50-60 °C en caisson et 80-100 °C contre le
+bloc. Disqualifié ici, quelle que soit sa finition.
