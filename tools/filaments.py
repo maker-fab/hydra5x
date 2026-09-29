@@ -56,6 +56,12 @@ FILAMENTS = {
     "ABS":        (90, 2.0, 0.95,  85, False, "toutes",   "semi-brillant", 0.5, 1.10, 1.05),
     "PETG":       (70, 2.0, 0.90,  68, False, "toutes",   "brillant",      0.3, 1.40, 0.95),
     "PETG-CF":    (30, 5.0, 0.30,  72, True,  "noir",     "mat",           0.3, 0.90, 0.70),
+    # Le taux de charge change tout sur un polyamide, et pas dans le sens
+    # qu'on croit : la fibre n'absorbe pas, mais **10 % de fibre ne
+    # bride quasiment pas le gonflement de la matrice**. Il faut 30 % pour
+    # le reduire de moitie. Un GF10 garde donc le defaut du PA6 nu en
+    # n'achetant presque rien en raideur.
+    "PA6-GF10":   (70, 3.7, 0.85, 110, False, "naturel",  "mat",           2.8, 0.70, 0.35),
     "PA6-GF":     (55, 5.0, 0.70, 120, False, "naturel",  "mat",           3.0, 0.55, 0.35),
     "PA6-CF":     (40, 7.0, 0.45, 130, True,  "noir",     "mat",           3.0, 0.45, 0.30),
     "PA12-GF":    (60, 4.0, 0.85, 110, False, "naturel",  "mat",           0.8, 0.60, 0.30),
@@ -72,8 +78,30 @@ REFERENCE = ("alu 6061", 23)
 
 
 def derive(cte, longueur_mm, delta_k):
-    """Dilatation d'une piece, mm."""
+    """Dilatation thermique d'une piece, mm."""
     return cte * (longueur_mm / 1000.0) * delta_k / 1000.0
+
+
+# Gonflement dimensionnel du sec a l'equilibre en ambiance ordinaire
+# (~50 % HR), en pourcent. Ce n'est PAS la reprise d'eau : c'est ce que la
+# piece grandit reellement.
+#
+# **C'est le chiffre qui disqualifie les polyamides sur une piece de
+# reference**, et il n'apparait sur aucune fiche de traction. Un PA6 sort
+# sec de son etuve, se monte juste, et grandit pendant la semaine qui suit.
+GONFLEMENT = {
+    "ASA": 0.03, "ASA mat": 0.03, "ASA-GF": 0.03, "ASA-CF": 0.03,
+    "ABS": 0.03, "PETG": 0.02, "PETG-CF": 0.02,
+    "PA6-GF10": 0.27, "PA6-GF": 0.30, "PA6-CF": 0.30,
+    "PA12-GF": 0.10, "PPA-GF": 0.15,
+    "PC": 0.02, "PC-GF": 0.02, "PC-CF": 0.02,
+    "PPS-GF": 0.005, "PPS-CF": 0.005, "PLA mat": 0.02,
+}
+
+
+def derive_humidite(nom, longueur_mm):
+    """Croissance d'une piece entre sa sortie d'etuve et son equilibre, mm."""
+    return GONFLEMENT.get(nom, 0.0) / 100.0 * longueur_mm
 
 
 # Ce que chaque poste exige vraiment, dans l'ordre.
@@ -106,9 +134,9 @@ def main():
 
     print(f"=== piece de {args.longueur:.0f} mm, caisson a "
           f"±{args.delta:.0f} K, tolerance {args.tolerance:.2f} mm ===\n")
-    print(f"  {'filament':<11s} {'derive':>8s} {'choc':>6s} {'humid.':>7s} "
-          f"{'fluage':>7s} {'usure':>6s} {'service':>8s} {'elec':>8s} "
-          f"{'couleurs':>9s}")
+    print(f"  {'filament':<11s} {'therm.':>7s} {'gonfl.':>7s} {'total':>7s} "
+          f"{'choc':>6s} {'fluage':>7s} {'usure':>6s} {'service':>8s} "
+          f"{'elec':>8s}")
     for nom, v in FILAMENTS.items():
         cte, e, choc, serv, cond, coul, aspect, hum, flu, us = v
         d = derive(cte, args.longueur, args.delta)
@@ -119,9 +147,12 @@ def main():
             drapeaux += " chaud"
         if hum >= 1.0:
             drapeaux += " HUMIDITE"
-        print(f"  {nom:<11s} {d:7.3f} {choc:6.2f} {hum:6.1f}% {flu:7.2f} "
-              f"{us:6.2f} {serv:7.0f}° "
-              f"{'CONDUIT' if cond else 'isolant':>8s} {coul:>9s}{drapeaux}")
+        g = derive_humidite(nom, args.longueur)
+        if g > args.tolerance:
+            drapeaux += " GONFLE"
+        print(f"  {nom:<11s} {d:7.3f} {g:7.3f} {d+g:7.3f} {choc:6.2f} "
+              f"{flu:7.2f} {us:6.2f} {serv:7.0f}° "
+              f"{'CONDUIT' if cond else 'isolant':>8s}{drapeaux}")
     nom, cte = REFERENCE
     print(f"  {nom:<11s} {derive(cte, args.longueur, args.delta):7.3f}"
           f"   (reference)")
@@ -129,8 +160,9 @@ def main():
     print(f"\n  « derive » : dilatation sur {args.longueur:.0f} mm pour "
           f"{args.delta:.0f} K. Marquee si elle depasse la tolerance.")
     print(f"  « choc », « fluage », « usure » : relatifs a l'ASA non charge.")
-    print(f"  « humid. » : reprise d'eau a saturation. Au-dela de 1 %, la")
-    print(f"      piece gonfle plus que sa tolerance -- marque HUMIDITE.")
+    print(f"  « gonfl. » : croissance entre la sortie d'etuve et l'equilibre")
+    print(f"      en ambiance. Elle ne se rattrape par aucun etalonnage,")
+    print(f"      parce qu'elle met des jours et qu'elle depend de la saison.")
     print(f"  « chaud » : service continu sous {args.service:.0f} °C.\n")
 
     for poste, (quoi, exigences) in POSTES.items():
@@ -138,10 +170,14 @@ def main():
         print(f"      exige : {', '.join(exigences)}")
         if "usure faible" in exigences:
             choix = [n for n, v in FILAMENTS.items()
-                     if v[9] <= 0.45 and v[7] < 1.0 and v[3] >= args.service]
+                     if v[9] <= 0.45
+                     and derive_humidite(n, args.longueur) <= args.tolerance
+                     and v[3] >= args.service]
         elif "fluage faible" in exigences:
             choix = [n for n, v in FILAMENTS.items()
-                     if v[8] <= 0.40 and v[7] < 1.0 and v[3] >= args.service]
+                     if v[8] <= 0.40
+                     and derive_humidite(n, args.longueur) <= args.tolerance
+                     and v[3] >= args.service]
         elif "isolant electrique" in exigences:
             choix = [n for n, v in FILAMENTS.items()
                      if not v[4] and v[3] >= args.service]
@@ -150,7 +186,8 @@ def main():
                      if v[2] >= 0.55 and v[3] >= args.service and not v[4]]
         else:
             choix = [n for n, v in FILAMENTS.items()
-                     if derive(v[0], args.longueur, args.delta) <= args.tolerance
+                     if derive(v[0], args.longueur, args.delta)
+                     + derive_humidite(n, args.longueur) <= args.tolerance
                      and v[3] >= args.service]
         print(f"      candidats : {', '.join(choix) if choix else 'aucun'}\n")
     return 0
@@ -158,5 +195,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
